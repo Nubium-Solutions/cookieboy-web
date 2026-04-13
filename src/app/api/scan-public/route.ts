@@ -16,6 +16,29 @@ const DICT_PATH = process.env.DICTIONARY_PATH ?? "/var/www/api/dictionary.json";
 const DICT_TTL_MS = 5 * 60 * 1000;
 let dictCache: { data: Dictionary; loaded: number } | null = null;
 
+const RATE_WINDOW_MS = 60 * 60 * 1000;
+const RATE_MAX_PER_IP = 5;
+const rateStore = new Map<string, number[]>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const hits = (rateStore.get(ip) ?? []).filter((t) => t > now - RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX_PER_IP) {
+    rateStore.set(ip, hits);
+    return false;
+  }
+  hits.push(now);
+  rateStore.set(ip, hits);
+  if (rateStore.size > 5000) {
+    for (const [k, v] of rateStore) {
+      const alive = v.filter((t) => t > now - RATE_WINDOW_MS);
+      if (alive.length === 0) rateStore.delete(k);
+      else rateStore.set(k, alive);
+    }
+  }
+  return true;
+}
+
 async function loadDictionary(): Promise<Dictionary> {
   if (dictCache && Date.now() - dictCache.loaded < DICT_TTL_MS) return dictCache.data;
   try {
@@ -170,6 +193,19 @@ const CONCURRENCY = 8;
 const HARD_CAP = 5000;
 const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|mp4|mp3|avi|mov|wav|woff2?|ttf|eot|json|xml|rss)(\?|$)/i;
 
+function isPrivateHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return true;
+  if (/^10\./.test(h)) return true;
+  if (/^127\./.test(h)) return true;
+  if (/^192\.168\./.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(h)) return true;
+  if (/^169\.254\./.test(h)) return true;
+  if (/^0\./.test(h)) return true;
+  if (h === "::1" || h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80:")) return true;
+  return false;
+}
+
 function normalizeUrl(raw: string, base: URL): string | null {
   try {
     const u = new URL(raw, base);
@@ -278,6 +314,15 @@ async function fetchOne(url: string): Promise<{ html: string; headers: Headers }
 }
 
 export async function POST(req: NextRequest) {
+  const fwd = req.headers.get("x-forwarded-for") ?? "";
+  const ip = (fwd.split(",")[0] || req.headers.get("x-real-ip") || "unknown").trim();
+  if (!checkRateLimit(ip)) {
+    return new Response(
+      JSON.stringify({ error: "rate_limit", message: `Máximo ${RATE_MAX_PER_IP} escaneos por hora por IP.` }),
+      { status: 429, headers: { "Retry-After": "3600" } }
+    );
+  }
+
   let body: { url?: string };
   try {
     body = await req.json();
@@ -296,6 +341,9 @@ export async function POST(req: NextRequest) {
   }
   if (!/^https?:$/.test(base.protocol)) {
     return new Response(JSON.stringify({ error: "invalid_protocol" }), { status: 400 });
+  }
+  if (isPrivateHost(base.hostname)) {
+    return new Response(JSON.stringify({ error: "private_host_blocked" }), { status: 400 });
   }
   base.hash = "";
   base.pathname = base.pathname.replace(/\/+$/, "") || "/";
