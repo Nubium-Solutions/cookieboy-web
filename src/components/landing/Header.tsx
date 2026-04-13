@@ -7,8 +7,8 @@ import { Icon } from "@iconify/react";
 const navLinks = [
   { label: "Inicio", href: "/" },
   { label: "Características", href: "/#caracteristicas" },
-  { label: "Precios", href: "/#precios" },
   { label: "Escáner", href: "/#escaner" },
+  { label: "Precios", href: "/#precios" },
 ];
 
 export function Header() {
