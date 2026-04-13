@@ -3,10 +3,15 @@
 import { redirect } from "next/navigation";
 import { login, register } from "@/lib/auth";
 
+function safeNext(raw: string): string {
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "/app/dashboard";
+  return raw;
+}
+
 export async function loginAction(_: unknown, formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "/app/dashboard");
+  const next = safeNext(String(formData.get("next") ?? "/app/dashboard"));
   try {
     await login(email, password);
   } catch (e) {

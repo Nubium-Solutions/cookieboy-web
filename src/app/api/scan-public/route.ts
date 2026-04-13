@@ -292,20 +292,62 @@ function detectPolicy(html: string): boolean {
   return /pol[ií]tica[- ]?de[- ]?cookies|cookie[- ]?policy|\/cookies["'\/]/i.test(html);
 }
 
-async function fetchOne(url: string): Promise<{ html: string; headers: Headers } | null> {
+const MAX_BODY_BYTES = 3_000_000;
+const MAX_REDIRECTS = 3;
+
+async function fetchOne(url: string, baseHost: string): Promise<{ html: string; headers: Headers } | null> {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), PER_REQ_MS);
   try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": "CookieBoy-Scanner/1.0 (+https://cookieboy.es)" },
-      redirect: "follow",
-      signal: ctrl.signal,
-    });
-    if (!res.ok) return null;
+    let current = url;
+    let res: Response | null = null;
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      try {
+        const u = new URL(current);
+        if (isPrivateHost(u.hostname)) return null;
+        if (u.hostname !== baseHost) return null;
+      } catch {
+        return null;
+      }
+      res = await fetch(current, {
+        headers: { "User-Agent": "CookieBoy-Scanner/1.0 (+https://cookieboy.es)" },
+        redirect: "manual",
+        signal: ctrl.signal,
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) return null;
+        current = new URL(loc, current).toString();
+        continue;
+      }
+      break;
+    }
+    if (!res || !res.ok) return null;
     const ct = res.headers.get("content-type") ?? "";
+    const cl = parseInt(res.headers.get("content-length") ?? "0", 10);
+    if (cl > MAX_BODY_BYTES) return { html: "", headers: res.headers };
     if (!ct.includes("text/html")) return { html: "", headers: res.headers };
-    const html = await res.text();
-    return { html, headers: res.headers };
+    const reader = res.body?.getReader();
+    if (!reader) return { html: "", headers: res.headers };
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) {
+        try { await reader.cancel(); } catch {}
+        break;
+      }
+      chunks.push(value);
+    }
+    const merged = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      merged.set(c, offset);
+      offset += c.byteLength;
+    }
+    return { html: new TextDecoder().decode(merged), headers: res.headers };
   } catch {
     return null;
   } finally {
@@ -323,11 +365,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const cl = parseInt(req.headers.get("content-length") ?? "0", 10);
+  if (cl > 2048) {
+    return new Response(JSON.stringify({ error: "body_too_large" }), { status: 413 });
+  }
+
   let body: { url?: string };
   try {
     body = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: "invalid_body" }), { status: 400 });
+  }
+  if (typeof body.url !== "string" || body.url.length > 2000) {
+    return new Response(JSON.stringify({ error: "invalid_url" }), { status: 400 });
   }
   let input = (body.url ?? "").trim();
   if (!input) return new Response(JSON.stringify({ error: "missing_url" }), { status: 400 });
@@ -373,7 +423,7 @@ export async function POST(req: NextRequest) {
           if (batch.length === 0) break;
           batch.forEach((u) => visited.add(u));
 
-          const results = await Promise.all(batch.map((u) => fetchOne(u).then((r) => ({ url: u, r }))));
+          const results = await Promise.all(batch.map((u) => fetchOne(u, base.hostname).then((r) => ({ url: u, r }))));
           for (const { url, r } of results) {
             if (!r) continue;
             parseSetCookies(r.headers, base.hostname, url, cookies);
