@@ -90,11 +90,11 @@ export function BentoGrid() {
               Español, inglés, francés, alemán, portugués, italiano y catalán.
             </p>
           </div>
-          <div className="mt-10 flex flex-wrap gap-3 items-center justify-center">
+          <div className="mt-10 flex gap-2 items-center justify-center">
             {["🇪🇸", "🇬🇧", "🇫🇷", "🇩🇪", "🇵🇹", "🇮🇹"].map((flag, i) => (
               <div
                 key={i}
-                className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-2xl hover:-translate-y-1 hover:shadow-md transition-all"
+                className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-xl sm:text-2xl hover:-translate-y-1 hover:shadow-md transition-all"
               >
                 {flag}
               </div>
