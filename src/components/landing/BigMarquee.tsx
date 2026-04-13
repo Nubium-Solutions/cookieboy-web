@@ -9,7 +9,7 @@ const phrases = [
 
 export function BigMarquee() {
   return (
-    <section className="py-24 border-y border-white/30 bg-white/5 backdrop-blur-sm overflow-hidden">
+    <section className="py-24 border-y border-white/30 bg-white/5 backdrop-blur-sm overflow-hidden" aria-hidden="true">
       <div
         className="animate-marquee-fast flex w-max"
         style={{
