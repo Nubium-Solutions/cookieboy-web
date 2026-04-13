@@ -4,6 +4,17 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
+function useScrolled(threshold = 10) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
 const navLinks = [
   { label: "Inicio", href: "/" },
   { label: "Características", href: "/#caracteristicas" },
@@ -13,6 +24,7 @@ const navLinks = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const scrolled = useScrolled(10);
 
   useEffect(() => {
     if (!open) return;
@@ -28,8 +40,22 @@ export function Header() {
   }, [open]);
 
   return (
-    <header className="fixed top-4 left-0 w-full z-50 px-4 sm:px-6 transition-all duration-300 pointer-events-none">
-      <div className="max-w-6xl mx-auto pointer-events-auto">
+    <header className="fixed top-0 left-0 w-full z-50 pt-4 transition-all duration-300 pointer-events-none">
+      <div
+        aria-hidden
+        className={`absolute inset-x-0 top-0 h-24 pointer-events-none transition-opacity duration-300 ${
+          scrolled ? "opacity-100" : "opacity-0"
+        }`}
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(248,250,252,0.85), rgba(248,250,252,0))",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          maskImage: "linear-gradient(to bottom, black 60%, transparent)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent)",
+        }}
+      />
+      <div className="max-w-6xl mx-auto pointer-events-auto px-4 sm:px-6 relative">
         <div className="relative backdrop-blur-xl bg-white/70 border border-white/40 shadow-sm rounded-full px-2 py-2 pl-6 flex items-center justify-between transition-all duration-500 hover:bg-white/80 hover:shadow-md">
           <Link href="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
             <span className="text-lg" aria-hidden>🍪</span>
