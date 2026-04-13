@@ -1,10 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 
 export function FloatingGallery() {
   const [active, setActive] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setActive(true);
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="py-24 md:py-32 bg-slate-50/50 max-w-[1400px] mx-auto px-6 relative overflow-hidden">
@@ -19,19 +33,19 @@ export function FloatingGallery() {
           Cero complicaciones.
         </h2>
         <p className="mt-4 text-lg text-slate-500 font-light max-w-xl mx-auto leading-relaxed">
-          Pasa el ratón para ver los 4 módulos que incluye CookieBoy.
+          Los 4 módulos que incluye CookieBoy, en un solo vistazo.
         </p>
       </div>
 
       <div
         id="gallery-interaction"
-        onClick={() => setActive((v) => !v)}
-        className={`relative z-10 w-full max-w-[1000px] h-[500px] md:h-[600px] mx-auto flex items-center justify-center perspective-1200 group cursor-pointer ${
+        ref={ref}
+        className={`relative z-10 w-full max-w-[1000px] h-[500px] md:h-[600px] mx-auto flex items-center justify-center perspective-1200 ${
           active ? "active" : ""
         }`}
       >
         {/* Center card */}
-        <div className="relative z-50 w-[300px] md:w-[360px] bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[32px] p-8 shadow-lg transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2">
+        <div className="relative z-50 w-[300px] md:w-[360px] bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[32px] p-8 shadow-lg transition-all duration-500">
           <div className="flex justify-between items-center mb-6">
             <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Panel</span>
             <div className="w-8 h-8 rounded-full bg-amber-100/50 border border-white flex items-center justify-center text-amber-500">
@@ -52,7 +66,7 @@ export function FloatingGallery() {
         </div>
 
         {/* Scatter cards */}
-        <div className="card-scatter-1 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring z-40 pointer-events-none group-hover:pointer-events-auto">
+        <div className="card-scatter-1 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring z-40 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Detectar</span>
             <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-500">
@@ -63,7 +77,7 @@ export function FloatingGallery() {
           <p className="mt-2 text-xs text-slate-500 font-light">Listado con categoría, duración y proveedor.</p>
         </div>
 
-        <div className="card-scatter-2 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-75 z-30 pointer-events-none group-hover:pointer-events-auto">
+        <div className="card-scatter-2 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-75 z-30 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Medir</span>
             <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-500">
@@ -74,7 +88,7 @@ export function FloatingGallery() {
           <p className="mt-2 text-xs text-slate-500 font-light">Tasa de aceptación, dispositivo y país.</p>
         </div>
 
-        <div className="card-scatter-3 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-100 z-20 pointer-events-none group-hover:pointer-events-auto">
+        <div className="card-scatter-3 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-100 z-20 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Publicar</span>
             <div className="w-7 h-7 rounded-full bg-orange-50 border border-orange-100/50 flex items-center justify-center text-orange-500">
@@ -85,7 +99,7 @@ export function FloatingGallery() {
           <p className="mt-2 text-xs text-slate-500 font-light">Autogenerada y sincronizada con el diccionario.</p>
         </div>
 
-        <div className="card-scatter-4 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-150 z-10 pointer-events-none group-hover:pointer-events-auto">
+        <div className="card-scatter-4 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-150 z-10 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Configurar</span>
             <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-500">
