@@ -10,6 +10,7 @@ import { BigMarquee } from "@/components/landing/BigMarquee";
 import { Pillars } from "@/components/landing/Pillars";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Pricing } from "@/components/landing/Pricing";
+import { Scanner } from "@/components/landing/Scanner";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
 
@@ -27,6 +28,7 @@ export default function HomePage() {
         <FloatingGallery />
         <BigMarquee />
         <Pillars />
+        <Scanner />
         <Testimonials />
         <Pricing />
         <CTA />
