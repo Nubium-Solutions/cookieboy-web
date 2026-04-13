@@ -66,7 +66,7 @@ export function Footer() {
           ))}
         </div>
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-slate-400 font-light">
+          <p className="text-sm text-slate-500 font-light">
             © {new Date().getFullYear()} CookieBoy · Nubium Solutions. Todos los derechos reservados.
           </p>
           <div className="flex gap-6 items-center">

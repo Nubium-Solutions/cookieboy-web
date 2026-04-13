@@ -12,7 +12,7 @@ const brands = [
 export function TrustedBy() {
   return (
     <section className="flex flex-col w-full max-w-[1400px] border-slate-200/30 border-t mx-auto py-20 items-center overflow-hidden">
-      <p className="text-sm text-slate-400 font-medium tracking-wide uppercase mb-12 px-6 text-center">
+      <p className="text-sm text-slate-500 font-medium tracking-wide uppercase mb-12 px-6 text-center">
         Webs que ya cumplen con CookieBoy
       </p>
       <div

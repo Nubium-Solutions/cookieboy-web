@@ -121,7 +121,7 @@ export function Pricing() {
           </div>
         ))}
       </div>
-      <p className="text-center text-sm text-slate-400 mt-8 font-light">
+      <p className="text-center text-sm text-slate-500 mt-8 font-light">
         Todos los planes incluyen auto-actualizaciones, diccionario en la nube y soporte GDPR/LOPDGDD.
       </p>
     </section>
