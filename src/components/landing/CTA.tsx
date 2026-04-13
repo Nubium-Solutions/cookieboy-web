@@ -1,14 +1,14 @@
 export function CTA() {
   return (
-    <section className="flex flex-col text-center min-h-[60vh] px-6 relative items-center justify-center py-20">
+    <section className="flex flex-col text-center min-h-[60vh] px-4 sm:px-6 relative items-center justify-center py-16 md:py-20">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/20 pointer-events-none" />
       <div className="w-64 h-64 rounded-full bg-amber-400/20 blur-[100px] absolute" />
-      <h2 className="text-5xl md:text-7xl font-medium text-slate-900 tracking-tighter mb-6 relative z-10">
+      <h2 className="text-4xl sm:text-5xl md:text-7xl font-medium text-slate-900 tracking-tighter mb-6 relative z-10 leading-[1.05]">
         Deja de arriesgarte.
         <br />
         Empieza a cumplir.
       </h2>
-      <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto mb-10 relative z-10 font-light">
+      <p className="text-base sm:text-lg md:text-xl text-slate-500 max-w-xl mx-auto mb-10 relative z-10 font-light">
         Instala CookieBoy en tu WordPress y cumple con GDPR desde el primer minuto.
         14 días de prueba gratis, sin tarjeta.
       </p>

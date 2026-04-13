@@ -2,20 +2,20 @@ import { Icon } from "@iconify/react";
 
 export function BentoGrid() {
   return (
-    <section id="caracteristicas" className="max-w-[1400px] mx-auto py-20 px-6">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-medium text-slate-900 tracking-tight mb-4">
+    <section id="caracteristicas" className="max-w-[1400px] mx-auto py-20 px-4 sm:px-6">
+      <div className="text-center mb-12 md:mb-16">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-medium text-slate-900 tracking-tight mb-4">
           Todo lo que necesitas para cumplir
         </h2>
-        <p className="text-lg text-slate-500 max-w-2xl mx-auto font-light">
+        <p className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto font-light">
           Detección automática, diccionario global en la nube, Consent Mode v2 y 7
           idiomas. Sin plugins extra, sin mantenimiento.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-8 min-h-[800px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 md:gap-8 md:min-h-[800px]">
         {/* Card 1 — Diccionario 2.400+ cookies */}
-        <div className="glass-panel md:col-span-2 flex flex-col rounded-[2rem] p-10 justify-between group">
+        <div className="glass-panel md:col-span-2 flex flex-col rounded-[2rem] p-6 sm:p-8 md:p-10 justify-between group">
           <div>
             <div className="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center mb-6">
               <Icon icon="solar:book-2-linear" width={24} height={24} className="text-slate-700" />
@@ -78,7 +78,7 @@ export function BentoGrid() {
         </div>
 
         {/* Card 2 — 7 idiomas */}
-        <div className="glass-panel flex flex-col rounded-[2rem] p-10 justify-between group">
+        <div className="glass-panel flex flex-col rounded-[2rem] p-6 sm:p-8 md:p-10 justify-between group">
           <div>
             <div className="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center mb-6">
               <Icon icon="solar:global-linear" width={24} height={24} className="text-slate-700" />
@@ -103,7 +103,7 @@ export function BentoGrid() {
         </div>
 
         {/* Card 3 — Consent Mode v2 */}
-        <div className="glass-panel flex flex-col rounded-[2rem] p-10 justify-between group">
+        <div className="glass-panel flex flex-col rounded-[2rem] p-6 sm:p-8 md:p-10 justify-between group">
           <div>
             <div className="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center mb-6">
               <Icon icon="solar:bolt-linear" width={24} height={24} className="text-slate-700" />
@@ -142,7 +142,7 @@ export function BentoGrid() {
         </div>
 
         {/* Card 4 — Auto-actualizaciones */}
-        <div className="glass-panel md:col-span-2 flex flex-col rounded-[2rem] p-10 justify-between group">
+        <div className="glass-panel md:col-span-2 flex flex-col rounded-[2rem] p-6 sm:p-8 md:p-10 justify-between group">
           <div>
             <div className="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center mb-6">
               <Icon icon="solar:refresh-circle-linear" width={24} height={24} className="text-slate-700" />

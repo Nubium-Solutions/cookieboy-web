@@ -33,10 +33,10 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="bg-white/80 backdrop-blur-md border-t border-slate-200 pt-20 pb-10 relative z-10">
-      <div className="max-w-[1400px] mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
-          <div className="md:col-span-4 flex flex-col items-start">
+    <footer className="bg-white/80 backdrop-blur-md border-t border-slate-200 pt-16 md:pt-20 pb-10 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 md:gap-12 mb-16 md:mb-20">
+          <div className="col-span-2 md:col-span-4 flex flex-col items-start">
             <Link href="/" className="flex items-center gap-3 group">
               <span className="text-2xl" aria-hidden>🍪</span>
               <span className="text-lg font-medium text-slate-900 tracking-tight uppercase">CookieBoy</span>

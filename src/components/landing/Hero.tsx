@@ -2,20 +2,20 @@ import { Icon } from "@iconify/react";
 
 export function Hero() {
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center pt-32 pb-16 px-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-16 max-w-7xl mx-auto w-full z-10">
+    <section className="relative w-full min-h-screen flex items-center justify-center pt-28 sm:pt-32 pb-16 px-4 sm:px-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-10 lg:gap-16 max-w-7xl mx-auto w-full z-10">
         {/* Text Content */}
         <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 border border-slate-200/70 backdrop-blur-md text-[10px] font-medium tracking-widest uppercase text-slate-500 shadow-sm mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             GDPR · LOPDGDD · ePrivacy
           </div>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-medium text-slate-900 leading-none tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-slate-900 leading-[1.05] tracking-tight mb-6">
             Cumple con
             <br />
             las cookies.
           </h1>
-          <p className="text-lg text-slate-500 max-w-lg leading-relaxed mb-10 font-light">
+          <p className="text-base sm:text-lg text-slate-500 max-w-lg leading-relaxed mb-10 font-light">
             Banner de cookies, detección automática, política autogenerada y
             Google Consent Mode v2. Todo desde un único plugin de WordPress
             ligero, en 7 idiomas y listo en 5 minutos.
@@ -37,7 +37,7 @@ export function Hero() {
         </div>
 
         {/* 3D Device Mockup with CookieBoy admin */}
-        <div className="relative perspective-1400 flex items-center justify-center mt-12 lg:mt-0">
+        <div className="relative perspective-1400 flex items-center justify-center mt-8 lg:mt-0 scale-[0.78] sm:scale-90 md:scale-100 origin-top">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] bg-amber-400/10 rounded-full blur-[90px] -z-10 pointer-events-none" />
 
           <div className="animate-float relative w-[340px] h-[720px] mx-auto transform-gpu transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] hover:scale-[1.02] transform-style-3d">

@@ -105,16 +105,16 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
       : "text-red-600";
 
   return (
-    <section id="escaner" className={`max-w-4xl mx-auto px-6 ${compact ? "py-20" : "py-32"}`}>
+    <section id="escaner" className={`max-w-4xl mx-auto px-4 sm:px-6 ${compact ? "py-16 md:py-20" : "py-20 md:py-32"}`}>
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/40 text-amber-700 text-xs font-medium uppercase tracking-wider mb-6">
           <Icon icon="solar:magnifer-linear" width={14} height={14} />
           Escáner gratuito
         </div>
-        <h2 className="text-4xl md:text-6xl font-medium text-slate-900 tracking-tighter mb-6">
+        <h2 className="text-3xl sm:text-4xl md:text-6xl font-medium text-slate-900 tracking-tighter mb-6 leading-[1.1]">
           ¿Tu web cumple con GDPR?
         </h2>
-        <p className="text-lg text-slate-500 font-light max-w-2xl mx-auto">
+        <p className="text-base md:text-lg text-slate-500 font-light max-w-2xl mx-auto">
           Introduce tu URL y analizamos las cookies, trackers y banners de tu sitio en segundos. Gratis y sin registro.
         </p>
       </div>
@@ -159,28 +159,28 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
               <div>
-                <div className="text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
+                <div className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
                   {progress?.visited ?? 0}
                 </div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Rastreadas</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Rastreadas</div>
               </div>
               <div>
-                <div className="text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
+                <div className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
                   {progress?.queue ?? 0}
                 </div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">En cola</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">En cola</div>
               </div>
               <div>
-                <div className="text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
+                <div className="text-3xl md:text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
                   {progress?.cookies ?? 0}
                 </div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Cookies</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Cookies</div>
               </div>
               <div>
-                <div className="text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
+                <div className="text-3xl md:text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
                   {progress?.trackers ?? 0}
                 </div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mt-1">Trackers</div>
+                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Trackers</div>
               </div>
             </div>
           </div>
@@ -189,12 +189,12 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
 
       {result && (
         <div className="space-y-6">
-          <div className="glass-panel p-10 rounded-[3rem] border border-white/60 relative overflow-hidden">
+          <div className="glass-panel p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/60 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-[100px]" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
               <div className="text-center md:text-left flex-1">
                 <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">CookieBoy Score</div>
-                <div className={`text-7xl font-medium tracking-tighter ${scoreColor}`}>{result.score}</div>
+                <div className={`text-6xl md:text-7xl font-medium tracking-tighter ${scoreColor}`}>{result.score}</div>
                 <div className="text-sm text-slate-500 font-light mt-2">sobre 100</div>
               </div>
               <div className="flex-1 space-y-3 w-full">

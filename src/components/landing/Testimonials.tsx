@@ -29,8 +29,8 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="max-w-[1400px] mx-auto px-6 pb-32">
-      <div className="text-center mb-16">
+    <section className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-24 md:pb-32">
+      <div className="text-center mb-12 md:mb-16">
         <span className="inline-flex items-center px-4 py-1.5 rounded-full border border-slate-200 bg-white/70 text-xs tracking-[0.2em] uppercase text-slate-500 mb-5">
           Testimonios
         </span>
@@ -46,7 +46,7 @@ export function Testimonials() {
         {testimonials.map((t) => (
           <div
             key={t.author}
-            className="glass-panel p-8 rounded-[2rem] flex flex-col justify-between min-h-[320px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm hover:-translate-y-1 hover:shadow-md transition-all"
+            className="glass-panel p-6 sm:p-8 rounded-[2rem] flex flex-col justify-between min-h-[280px] md:min-h-[320px] border border-white/60 bg-white/70 backdrop-blur-xl shadow-sm hover:-translate-y-1 hover:shadow-md transition-all"
           >
             <div>
               <div className="flex items-center justify-between mb-7">
