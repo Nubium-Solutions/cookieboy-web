@@ -89,7 +89,7 @@ export function Pricing() {
             {plan.highlighted && (
               <>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/20 rounded-full blur-[40px]" />
-                <div className="text-xs font-medium tracking-wider uppercase text-amber-600 mb-2 relative z-10">
+                <div className="text-xs font-medium tracking-wider uppercase text-amber-700 mb-2 relative z-10">
                   Más popular
                 </div>
               </>

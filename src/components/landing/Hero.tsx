@@ -1,4 +1,4 @@
-import { Icon } from "@iconify/react";
+import { IconCellular, IconWifi, IconBattery, IconGraphUp, IconShieldCheck } from "@/components/icons";
 
 export function Hero() {
   return (
@@ -64,9 +64,9 @@ export function Hero() {
               <div className="h-14 w-full pt-3 px-6 flex justify-between items-center text-xs font-medium text-slate-800 z-40 bg-gradient-to-b from-[#f8f9fb] to-transparent">
                 <span className="ml-1 tracking-tight">9:41</span>
                 <div className="flex gap-1.5 items-center opacity-80 mr-1">
-                  <Icon icon="solar:celluler-linear" width={14} height={14} />
-                  <Icon icon="solar:wi-fi-linear" width={14} height={14} />
-                  <Icon icon="solar:battery-charge-linear" width={16} height={16} />
+                  <IconCellular size={14} />
+                  <IconWifi size={14} />
+                  <IconBattery size={16} />
                 </div>
               </div>
 
@@ -80,9 +80,9 @@ export function Hero() {
                 {/* Acceptance rate */}
                 <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-sm p-4 flex items-center justify-between relative border border-slate-100/80 group transition-all hover:-translate-y-1">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">Aceptación</span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-widest">Aceptación</span>
                     <span className="text-3xl font-medium text-slate-800 tracking-tight mt-1">
-                      87<span className="text-sm text-slate-400 font-normal ml-px">%</span>
+                      87<span className="text-sm text-slate-500 font-normal ml-px">%</span>
                     </span>
                   </div>
                   <div className="relative w-[60px] h-[60px] rounded-full flex items-center justify-center">
@@ -91,7 +91,7 @@ export function Hero() {
                       <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" strokeWidth="8" strokeDasharray="264" strokeDashoffset="34" strokeLinecap="round" />
                     </svg>
                     <div className="w-8 h-8 bg-amber-50 rounded-full flex items-center justify-center border border-amber-100/50 text-amber-500 group-hover:scale-110 transition-transform">
-                      <Icon icon="solar:graph-up-linear" width={14} height={14} />
+                      <IconGraphUp size={14} />
                     </div>
                   </div>
                 </div>
@@ -164,7 +164,7 @@ export function Hero() {
                   <div className="flex items-center justify-between z-10">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-amber-50/80 flex items-center justify-center border border-amber-100/50">
-                        <Icon icon="solar:shield-check-linear" width={13} height={13} className="text-amber-600" />
+                        <IconShieldCheck size={13} className="text-amber-600" />
                       </div>
                       <div>
                         <div className="text-[11px] font-medium text-slate-800 tracking-tight leading-tight">Detección automática</div>

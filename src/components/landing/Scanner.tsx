@@ -107,7 +107,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
   return (
     <section id="escaner" className={`max-w-4xl mx-auto px-4 sm:px-6 ${compact ? "pt-16 md:pt-20 pb-24 md:pb-32" : "pt-20 md:pt-32 pb-28 md:pb-40"}`}>
       <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-300/40 text-amber-700 text-xs font-medium uppercase tracking-wider mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-semibold uppercase tracking-wider mb-6">
           <Icon icon="solar:magnifer-linear" width={14} height={14} />
           Escáner gratuito
         </div>

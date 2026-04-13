@@ -60,13 +60,13 @@ export function Footer() {
             © {new Date().getFullYear()} CookieBoy · Nubium Solutions. Todos los derechos reservados.
           </p>
           <div className="flex gap-6 items-center">
-            <a href="#" aria-label="Twitter" className="text-slate-400 hover:text-amber-600 transition-colors">
+            <a href="#" aria-label="Twitter" className="text-slate-500 hover:text-amber-700 transition-colors">
               <Icon icon="solar:chat-round-linear" width={20} height={20} />
             </a>
-            <a href="#" aria-label="GitHub" className="text-slate-400 hover:text-amber-600 transition-colors">
+            <a href="#" aria-label="GitHub" className="text-slate-500 hover:text-amber-700 transition-colors">
               <Icon icon="solar:code-circle-linear" width={20} height={20} />
             </a>
-            <a href="#" aria-label="LinkedIn" className="text-slate-400 hover:text-amber-600 transition-colors">
+            <a href="#" aria-label="LinkedIn" className="text-slate-500 hover:text-amber-700 transition-colors">
               <Icon icon="solar:link-circle-linear" width={20} height={20} />
             </a>
           </div>
