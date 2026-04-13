@@ -157,19 +157,27 @@ export function BentoGrid() {
             </p>
           </div>
           <div className="mt-10 flex flex-col md:flex-row gap-5">
-            <div className="flex-[2] bg-white/60 border border-white/80 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-sm min-h-[160px]">
-              <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M 15,30 L 40,60 L 65,35 L 85,75" stroke="#f59e0b" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-                <path d="M 40,60 L 55,85" stroke="#f59e0b" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-              </svg>
-              <div className="absolute top-[30%] left-[15%] w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm border border-white" />
-              <div className="absolute top-[60%] left-[40%] w-5 h-5 rounded-full bg-white border-2 border-amber-200 shadow-sm flex items-center justify-center">
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                <div className="w-2 h-2 bg-amber-500 rounded-full absolute" />
+            <div className="flex-[2] bg-white/60 border border-white/80 rounded-2xl shadow-sm p-4 flex flex-col gap-2 min-h-[160px]">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-xs font-normal text-slate-500 tracking-wider uppercase">Últimas añadidas</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  LIVE
+                </div>
               </div>
-              <div className="absolute top-[35%] left-[65%] w-3 h-3 rounded-full bg-amber-300 shadow-sm border border-white" />
-              <div className="absolute top-[75%] left-[85%] w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm border border-white" />
-              <div className="absolute top-[85%] left-[55%] w-2.5 h-2.5 rounded-full bg-amber-300" />
+              {[
+                { name: "_ga_HL5JPL", cat: "Analytics", provider: "Google", time: "2h", color: "bg-blue-400" },
+                { name: "_fbp", cat: "Marketing", provider: "Meta", time: "6h", color: "bg-rose-400" },
+                { name: "hubspotutk", cat: "Marketing", provider: "HubSpot", time: "1d", color: "bg-orange-400" },
+                { name: "_clsk", cat: "Analytics", provider: "Microsoft", time: "2d", color: "bg-blue-400" },
+              ].map((c) => (
+                <div key={c.name} className="flex items-center gap-3 py-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${c.color} shrink-0`} />
+                  <div className="font-mono text-xs text-slate-700 truncate min-w-0 flex-1">{c.name}</div>
+                  <div className="text-[10px] text-slate-400 font-light shrink-0 hidden sm:block">{c.provider}</div>
+                  <div className="text-[10px] text-slate-400 font-light shrink-0">hace {c.time}</div>
+                </div>
+              ))}
             </div>
             <div className="flex-[1] flex flex-col gap-4">
               <div className="bg-white/60 border border-white/80 rounded-xl p-5 flex-1 flex flex-col justify-center shadow-sm">
