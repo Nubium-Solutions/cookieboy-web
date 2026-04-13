@@ -9,6 +9,11 @@ type DetectedCookie = {
   secure: boolean;
   http_only: boolean;
   found_on: string[];
+  source: "http" | "inferred";
+  inferred_from?: string;
+  category?: "analytics" | "marketing" | "preferences" | "necessary";
+  provider?: string;
+  purpose?: string;
 };
 
 type DetectedTracker = {
@@ -35,6 +40,92 @@ const TRACKERS: { pattern: RegExp; name: string; provider: string; category: Det
   { pattern: /hubspot|hs-scripts/i, name: "HubSpot", provider: "HubSpot", category: "marketing" },
   { pattern: /mailchimp|list-manage\.com/i, name: "Mailchimp", provider: "Mailchimp", category: "marketing" },
 ];
+
+type InferredCookie = {
+  name: string;
+  domain: string;
+  expires: string;
+  purpose: string;
+  category: "analytics" | "marketing" | "preferences" | "necessary";
+  provider: string;
+};
+
+const TRACKER_COOKIES: Record<string, InferredCookie[]> = {
+  "Google Tag Manager": [
+    { name: "_ga", domain: "google-analytics", expires: "2 años", purpose: "Identifica usuarios únicos para Google Analytics.", category: "analytics", provider: "Google" },
+    { name: "_gid", domain: "google-analytics", expires: "24 horas", purpose: "Identifica usuarios únicos durante 24h.", category: "analytics", provider: "Google" },
+    { name: "_gat", domain: "google-analytics", expires: "1 minuto", purpose: "Limita la frecuencia de peticiones a Analytics.", category: "analytics", provider: "Google" },
+  ],
+  "Google Analytics": [
+    { name: "_ga", domain: "google-analytics", expires: "2 años", purpose: "Identifica usuarios únicos para Google Analytics.", category: "analytics", provider: "Google" },
+    { name: "_gid", domain: "google-analytics", expires: "24 horas", purpose: "Identifica usuarios únicos durante 24h.", category: "analytics", provider: "Google" },
+    { name: "_gat", domain: "google-analytics", expires: "1 minuto", purpose: "Limita la frecuencia de peticiones a Analytics.", category: "analytics", provider: "Google" },
+    { name: "_ga_*", domain: "google-analytics", expires: "2 años", purpose: "Mantiene el estado de sesión para Google Analytics 4.", category: "analytics", provider: "Google" },
+  ],
+  "Meta Pixel": [
+    { name: "_fbp", domain: "facebook", expires: "3 meses", purpose: "Identificador de navegador para Meta Ads.", category: "marketing", provider: "Meta" },
+    { name: "fr", domain: "facebook.com", expires: "3 meses", purpose: "Publicidad dirigida en Facebook.", category: "marketing", provider: "Meta" },
+  ],
+  "Hotjar": [
+    { name: "_hjSessionUser_*", domain: "hotjar", expires: "1 año", purpose: "Identifica al usuario único para Hotjar.", category: "analytics", provider: "Hotjar" },
+    { name: "_hjSession_*", domain: "hotjar", expires: "30 minutos", purpose: "Mantiene la sesión de Hotjar activa.", category: "analytics", provider: "Hotjar" },
+  ],
+  "Microsoft Clarity": [
+    { name: "_clck", domain: "clarity.ms", expires: "1 año", purpose: "Almacena el ID de usuario de Clarity.", category: "analytics", provider: "Microsoft" },
+    { name: "_clsk", domain: "clarity.ms", expires: "1 día", purpose: "Vincula múltiples vistas de página a una sesión.", category: "analytics", provider: "Microsoft" },
+  ],
+  "Google Ads": [
+    { name: "IDE", domain: "doubleclick.net", expires: "1 año", purpose: "Publicidad personalizada en la red Google Display.", category: "marketing", provider: "Google" },
+    { name: "_gcl_au", domain: "google", expires: "3 meses", purpose: "Atribución de conversiones de Google Ads.", category: "marketing", provider: "Google" },
+  ],
+  "LinkedIn Insight": [
+    { name: "li_sugr", domain: "linkedin.com", expires: "3 meses", purpose: "Identifica al usuario para publicidad en LinkedIn.", category: "marketing", provider: "LinkedIn" },
+    { name: "bcookie", domain: "linkedin.com", expires: "1 año", purpose: "ID del navegador para LinkedIn.", category: "marketing", provider: "LinkedIn" },
+  ],
+  "TikTok Pixel": [
+    { name: "_ttp", domain: "tiktok.com", expires: "1 año", purpose: "ID de seguimiento de TikTok Ads.", category: "marketing", provider: "TikTok" },
+  ],
+  "YouTube Embed": [
+    { name: "VISITOR_INFO1_LIVE", domain: "youtube.com", expires: "6 meses", purpose: "Mide el ancho de banda del usuario para reproducir vídeos.", category: "marketing", provider: "Google" },
+    { name: "YSC", domain: "youtube.com", expires: "Sesión", purpose: "Cuenta visitas a vídeos de YouTube.", category: "marketing", provider: "Google" },
+  ],
+  "HubSpot": [
+    { name: "__hstc", domain: "hubspot", expires: "6 meses", purpose: "Seguimiento de visitantes para HubSpot.", category: "marketing", provider: "HubSpot" },
+    { name: "hubspotutk", domain: "hubspot", expires: "6 meses", purpose: "Identifica al usuario para HubSpot.", category: "marketing", provider: "HubSpot" },
+  ],
+  "Intercom": [
+    { name: "intercom-id-*", domain: "intercom.io", expires: "9 meses", purpose: "ID anónimo del visitante en Intercom.", category: "preferences", provider: "Intercom" },
+    { name: "intercom-session-*", domain: "intercom.io", expires: "1 semana", purpose: "Sesión de Intercom Messenger.", category: "preferences", provider: "Intercom" },
+  ],
+  "Stripe": [
+    { name: "__stripe_mid", domain: "stripe.com", expires: "1 año", purpose: "Detección de fraude en pagos.", category: "necessary", provider: "Stripe" },
+    { name: "__stripe_sid", domain: "stripe.com", expires: "30 minutos", purpose: "Sesión temporal de pagos Stripe.", category: "necessary", provider: "Stripe" },
+  ],
+};
+
+function mergeInferredCookies(trackerNames: string[], cookies: Map<string, DetectedCookie>) {
+  for (const trackerName of trackerNames) {
+    const inferred = TRACKER_COOKIES[trackerName];
+    if (!inferred) continue;
+    for (const c of inferred) {
+      const key = `${c.name}|${c.domain}`;
+      if (cookies.has(key)) continue;
+      cookies.set(key, {
+        name: c.name,
+        domain: c.domain,
+        expires: c.expires,
+        secure: false,
+        http_only: false,
+        found_on: [],
+        source: "inferred",
+        inferred_from: trackerName,
+        category: c.category,
+        provider: c.provider,
+        purpose: c.purpose,
+      });
+    }
+  }
+}
 
 const MAX_TOTAL_MS = 600_000;
 const PER_REQ_MS = 6000;
@@ -98,7 +189,7 @@ function parseSetCookies(headers: Headers, pageHost: string, pageUrl: string, ma
         existing.found_on.push(pageUrl);
       }
     } else {
-      map.set(key, { name, domain, expires, secure, http_only: httpOnly, found_on: [pageUrl] });
+      map.set(key, { name, domain, expires, secure, http_only: httpOnly, found_on: [pageUrl], source: "http" });
     }
   }
 }
@@ -222,6 +313,7 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        mergeInferredCookies([...trackers.keys()], cookies);
         const cookiesArr = [...cookies.values()];
         const trackersArr = [...trackers.values()];
         const score = computeScore({

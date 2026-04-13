@@ -10,7 +10,17 @@ type ScanResult = {
   urls_scanned: number;
   queue_remaining: number;
   timed_out: boolean;
-  cookies: { name: string; domain: string; expires?: string; secure: boolean; http_only: boolean }[];
+  cookies: {
+    name: string;
+    domain: string;
+    expires?: string;
+    secure: boolean;
+    http_only: boolean;
+    source: "http" | "inferred";
+    inferred_from?: string;
+    provider?: string;
+    purpose?: string;
+  }[];
   trackers: { name: string; provider: string; category: string }[];
   checks: { has_banner: boolean; has_policy: boolean };
   score: number;
@@ -257,13 +267,30 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
                   </thead>
                   <tbody>
                     {result.cookies.map((c, i) => (
-                      <tr key={`${c.name}-${i}`} className="border-b border-slate-100 last:border-0">
-                        <td className="py-3 pr-4 font-mono text-slate-900">{c.name}</td>
+                      <tr key={`${c.name}-${i}`} className="border-b border-slate-100 last:border-0 align-top">
+                        <td className="py-3 pr-4">
+                          <div className="font-mono text-slate-900">{c.name}</div>
+                          {c.source === "inferred" && (
+                            <div className="text-[10px] text-amber-700 font-light mt-1">
+                              Inferida de {c.inferred_from}
+                            </div>
+                          )}
+                          {c.purpose && (
+                            <div className="text-[11px] text-slate-400 font-light mt-1 max-w-xs">{c.purpose}</div>
+                          )}
+                        </td>
                         <td className="py-3 pr-4 text-slate-600">{c.domain}</td>
                         <td className="py-3 pr-4 text-slate-500 text-xs">{c.expires ?? "Sesión"}</td>
-                        <td className="py-3 text-xs text-slate-500">
-                          {c.secure && <span className="mr-2">Secure</span>}
-                          {c.http_only && <span>HttpOnly</span>}
+                        <td className="py-3 text-xs">
+                          {c.source === "inferred" ? (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium uppercase tracking-wider text-[10px]">
+                              Inferida
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium uppercase tracking-wider text-[10px]">
+                              Detectada
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
