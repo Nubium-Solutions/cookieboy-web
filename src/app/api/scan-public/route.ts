@@ -1,6 +1,43 @@
 import { NextRequest } from "next/server";
+import { promises as fs } from "fs";
 
 export const maxDuration = 300;
+
+type DictEntry = {
+  cat: "necessary" | "analytics" | "marketing" | "preferences";
+  provider: string;
+  purpose: string;
+  duration: string;
+  policy_url?: string;
+};
+type Dictionary = Record<string, DictEntry>;
+
+const DICT_PATH = process.env.DICTIONARY_PATH ?? "/var/www/api/dictionary.json";
+const DICT_TTL_MS = 5 * 60 * 1000;
+let dictCache: { data: Dictionary; loaded: number } | null = null;
+
+async function loadDictionary(): Promise<Dictionary> {
+  if (dictCache && Date.now() - dictCache.loaded < DICT_TTL_MS) return dictCache.data;
+  try {
+    const raw = await fs.readFile(DICT_PATH, "utf8");
+    const data = JSON.parse(raw) as Dictionary;
+    dictCache = { data, loaded: Date.now() };
+    return data;
+  } catch {
+    dictCache = { data: {}, loaded: Date.now() };
+    return {};
+  }
+}
+
+function lookupDict(name: string, dict: Dictionary): DictEntry | null {
+  if (dict[name]) return dict[name];
+  for (const pattern in dict) {
+    if (!pattern.includes("*")) continue;
+    const regex = new RegExp("^" + pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$");
+    if (regex.test(name)) return dict[pattern];
+  }
+  return null;
+}
 
 type DetectedCookie = {
   name: string;
@@ -314,6 +351,15 @@ export async function POST(req: NextRequest) {
         }
 
         mergeInferredCookies([...trackers.keys()], cookies);
+        const dict = await loadDictionary();
+        for (const c of cookies.values()) {
+          const entry = lookupDict(c.name, dict);
+          if (!entry) continue;
+          c.category = c.category ?? entry.cat;
+          c.provider = c.provider ?? entry.provider;
+          c.purpose = c.purpose ?? entry.purpose;
+          c.expires = c.expires ?? entry.duration;
+        }
         const cookiesArr = [...cookies.values()];
         const trackersArr = [...trackers.values()];
         const score = computeScore({
