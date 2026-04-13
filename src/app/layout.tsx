@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ScrollTopOnLoad } from "@/components/ScrollTopOnLoad";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -51,6 +52,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.iconify.design" />
       </head>
       <body className="min-h-full bg-slate-50 text-slate-900 antialiased overflow-x-hidden selection:bg-amber-100 selection:text-amber-900">
+        <ScrollTopOnLoad />
         {children}
       </body>
     </html>
