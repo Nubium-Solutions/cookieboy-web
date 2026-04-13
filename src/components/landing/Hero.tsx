@@ -28,7 +28,7 @@ export function Hero() {
               Probar gratis
             </a>
             <a
-              href="#caracteristicas"
+              href="/#caracteristicas"
               className="w-full sm:w-auto px-8 py-4 rounded-full text-sm font-normal text-slate-700 bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)] hover:bg-white/60 transition-all duration-300 inline-flex items-center justify-center"
             >
               Ver características
