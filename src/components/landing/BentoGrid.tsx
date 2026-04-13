@@ -91,7 +91,7 @@ export function BentoGrid() {
             </p>
           </div>
           <div className="mt-10 flex flex-wrap gap-3 items-center justify-center">
-            {["🇪🇸", "🇬🇧", "🇫🇷", "🇩🇪", "🇵🇹", "🇮🇹", "🇪🇸"].map((flag, i) => (
+            {["🇪🇸", "🇬🇧", "🇫🇷", "🇩🇪", "🇵🇹", "🇮🇹"].map((flag, i) => (
               <div
                 key={i}
                 className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-2xl hover:-translate-y-1 hover:shadow-md transition-all"
