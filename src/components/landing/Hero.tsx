@@ -132,8 +132,8 @@ export function Hero() {
                         <Icon icon="solar:shield-check-linear" width={14} height={14} className="text-amber-500" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-medium text-slate-800 tracking-tight">Detección automática</h4>
-                        <p className="text-xs text-amber-500 font-normal mt-0.5">Activa · 12 cookies</p>
+                        <div className="text-xs font-medium text-slate-800 tracking-tight">Detección automática</div>
+                        <p className="text-xs text-amber-600 font-normal mt-0.5">Activa · 12 cookies</p>
                       </div>
                     </div>
                     <div className="w-8 h-4 bg-amber-500 rounded-full relative shadow-inner">

@@ -159,23 +159,23 @@ export function BentoGrid() {
           <div className="mt-10 flex flex-col md:flex-row gap-5">
             <div className="flex-[2] bg-white/60 border border-white/80 rounded-2xl shadow-sm p-4 flex flex-col gap-2 min-h-[160px]">
               <div className="flex items-center justify-between mb-1">
-                <div className="text-xs font-normal text-slate-500 tracking-wider uppercase">Últimas añadidas</div>
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-medium">
+                <div className="text-xs font-normal text-slate-600 tracking-wider uppercase">Últimas añadidas</div>
+                <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   LIVE
                 </div>
               </div>
               {[
-                { name: "_ga_HL5JPL", cat: "Analytics", provider: "Google", time: "2h", color: "bg-blue-400" },
-                { name: "_fbp", cat: "Marketing", provider: "Meta", time: "6h", color: "bg-rose-400" },
-                { name: "hubspotutk", cat: "Marketing", provider: "HubSpot", time: "1d", color: "bg-orange-400" },
-                { name: "_clsk", cat: "Analytics", provider: "Microsoft", time: "2d", color: "bg-blue-400" },
+                { name: "_ga_HL5JPL", cat: "Analytics", provider: "Google", time: "2h", color: "bg-blue-500" },
+                { name: "_fbp", cat: "Marketing", provider: "Meta", time: "6h", color: "bg-rose-500" },
+                { name: "hubspotutk", cat: "Marketing", provider: "HubSpot", time: "1d", color: "bg-orange-500" },
+                { name: "_clsk", cat: "Analytics", provider: "Microsoft", time: "2d", color: "bg-blue-500" },
               ].map((c) => (
                 <div key={c.name} className="flex items-center gap-3 py-1.5">
                   <div className={`w-1.5 h-1.5 rounded-full ${c.color} shrink-0`} />
                   <div className="font-mono text-xs text-slate-700 truncate min-w-0 flex-1">{c.name}</div>
-                  <div className="text-[10px] text-slate-400 font-light shrink-0 hidden sm:block">{c.provider}</div>
-                  <div className="text-[10px] text-slate-400 font-light shrink-0">hace {c.time}</div>
+                  <div className="text-xs text-slate-600 font-light shrink-0 hidden sm:block">{c.provider}</div>
+                  <div className="text-xs text-slate-600 font-light shrink-0">hace {c.time}</div>
                 </div>
               ))}
             </div>

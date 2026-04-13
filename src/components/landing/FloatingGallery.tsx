@@ -103,7 +103,7 @@ export function FloatingGallery() {
                 <Icon icon={f.icon} width={14} height={14} />
               </div>
             </div>
-            <h4 className="text-base font-medium text-slate-800 tracking-tight">{f.title}</h4>
+            <h3 className="text-base font-medium text-slate-800 tracking-tight">{f.title}</h3>
             <p className="mt-1.5 text-xs text-slate-500 font-light">{f.description}</p>
           </div>
         ))}
@@ -143,7 +143,7 @@ export function FloatingGallery() {
               <Icon icon="solar:shield-check-linear" width={14} height={14} />
             </div>
           </div>
-          <h4 className="text-lg font-medium text-slate-800 tracking-tight">Cookies detectadas</h4>
+          <h3 className="text-lg font-medium text-slate-800 tracking-tight">Cookies detectadas</h3>
           <p className="mt-2 text-xs text-slate-500 font-light">Listado con categoría, duración y proveedor.</p>
         </div>
 
@@ -154,7 +154,7 @@ export function FloatingGallery() {
               <Icon icon="solar:graph-linear" width={14} height={14} />
             </div>
           </div>
-          <h4 className="text-lg font-medium text-slate-800 tracking-tight">Consentimientos</h4>
+          <h3 className="text-lg font-medium text-slate-800 tracking-tight">Consentimientos</h3>
           <p className="mt-2 text-xs text-slate-500 font-light">Tasa de aceptación, dispositivo y país.</p>
         </div>
 
@@ -165,7 +165,7 @@ export function FloatingGallery() {
               <Icon icon="solar:document-text-linear" width={14} height={14} />
             </div>
           </div>
-          <h4 className="text-lg font-medium text-slate-800 tracking-tight">Política de cookies</h4>
+          <h3 className="text-lg font-medium text-slate-800 tracking-tight">Política de cookies</h3>
           <p className="mt-2 text-xs text-slate-500 font-light">Autogenerada y sincronizada con el diccionario.</p>
         </div>
 
@@ -176,7 +176,7 @@ export function FloatingGallery() {
               <Icon icon="solar:settings-linear" width={14} height={14} />
             </div>
           </div>
-          <h4 className="text-lg font-medium text-slate-800 tracking-tight">Banner editor</h4>
+          <h3 className="text-lg font-medium text-slate-800 tracking-tight">Banner editor</h3>
           <p className="mt-2 text-xs text-slate-500 font-light">Colores, textos, posición y categorías.</p>
         </div>
       </div>

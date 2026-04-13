@@ -46,6 +46,10 @@ export default function RootLayout({
       lang="es"
       className={`${inter.variable} h-full antialiased scroll-smooth`}
     >
+      <head>
+        <link rel="preconnect" href="https://api.iconify.design" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.iconify.design" />
+      </head>
       <body className="min-h-full bg-slate-50 text-slate-900 antialiased overflow-x-hidden selection:bg-amber-100 selection:text-amber-900">
         {children}
       </body>
