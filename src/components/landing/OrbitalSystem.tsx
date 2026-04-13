@@ -51,7 +51,7 @@ export function OrbitalSystem() {
               <span className="text-4xl" aria-hidden>🍪</span>
             </div>
           </div>
-          <span className="mt-4 text-[10px] uppercase tracking-[0.35em] text-slate-400 font-normal">COOKIEBOY</span>
+          <span className="mt-4 text-[10px] uppercase tracking-[0.35em] text-slate-500 font-normal">COOKIEBOY</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {integrations.map((it) => (
@@ -80,7 +80,7 @@ export function OrbitalSystem() {
               <span className="text-6xl" aria-hidden>🍪</span>
             </div>
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
-              <span className="text-xs uppercase tracking-[0.35em] text-slate-400 font-normal">COOKIEBOY</span>
+              <span className="text-xs uppercase tracking-[0.35em] text-slate-500 font-normal">COOKIEBOY</span>
             </div>
           </div>
 

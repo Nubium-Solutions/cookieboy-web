@@ -138,7 +138,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
           {loading ? "Analizando..." : "Analizar"}
         </button>
       </form>
-      <p className="text-center text-xs text-slate-400 font-light mb-12">
+      <p className="text-center text-xs text-slate-500 font-light mb-12">
         Rastreamos todas las páginas internas de tu sitio para mostrarte el plan que mejor encaja.
       </p>
 
@@ -154,7 +154,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
           <div className="relative z-10">
             <div className="inline-block w-12 h-12 border-4 border-amber-300 border-t-transparent rounded-full animate-spin mb-6" />
             <p className="text-slate-500 font-light mb-1">Rastreando {url}...</p>
-            <p className="text-slate-400 text-xs font-light mb-8">
+            <p className="text-slate-500 text-xs font-light mb-8">
               El tamaño de la web determinará la duración del análisis
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
@@ -276,7 +276,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
                             </div>
                           )}
                           {c.purpose && (
-                            <div className="text-[11px] text-slate-400 font-light mt-1 max-w-xs">{c.purpose}</div>
+                            <div className="text-[11px] text-slate-500 font-light mt-1 max-w-xs">{c.purpose}</div>
                           )}
                         </td>
                         <td className="py-3 pr-4 text-slate-600">{c.domain}</td>

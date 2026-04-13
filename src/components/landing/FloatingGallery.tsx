@@ -82,7 +82,7 @@ export function FloatingGallery() {
       <div className="md:hidden grid grid-cols-1 gap-4 max-w-md mx-auto">
         <div className="bg-white/80 backdrop-blur-2xl border border-white/80 rounded-[28px] p-6 shadow-lg">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Panel</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Panel</span>
             <div className="w-8 h-8 rounded-full bg-amber-100/50 border border-white flex items-center justify-center text-amber-500">
               <Icon icon="solar:monitor-linear" width={16} height={16} />
             </div>
@@ -98,7 +98,7 @@ export function FloatingGallery() {
             className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-[24px] p-5 shadow-md"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">{f.eyebrow}</span>
+              <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">{f.eyebrow}</span>
               <div className={`w-7 h-7 rounded-full border flex items-center justify-center ${accentStyles[f.accent]}`}>
                 <Icon icon={f.icon} width={14} height={14} />
               </div>
@@ -119,7 +119,7 @@ export function FloatingGallery() {
       >
         <div className="relative z-50 w-[300px] md:w-[360px] bg-white/70 backdrop-blur-2xl border border-white/80 rounded-[32px] p-8 shadow-lg transition-all duration-500">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Panel</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Panel</span>
             <div className="w-8 h-8 rounded-full bg-amber-100/50 border border-white flex items-center justify-center text-amber-500">
               <Icon icon="solar:monitor-linear" width={16} height={16} />
             </div>
@@ -138,7 +138,7 @@ export function FloatingGallery() {
 
         <div className="card-scatter-1 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring z-40 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Detectar</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Detectar</span>
             <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-500">
               <Icon icon="solar:shield-check-linear" width={14} height={14} />
             </div>
@@ -149,7 +149,7 @@ export function FloatingGallery() {
 
         <div className="card-scatter-2 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-75 z-30 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Medir</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Medir</span>
             <div className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-500">
               <Icon icon="solar:graph-linear" width={14} height={14} />
             </div>
@@ -160,7 +160,7 @@ export function FloatingGallery() {
 
         <div className="card-scatter-3 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-100 z-20 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Publicar</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Publicar</span>
             <div className="w-7 h-7 rounded-full bg-orange-50 border border-orange-100/50 flex items-center justify-center text-orange-500">
               <Icon icon="solar:document-text-linear" width={14} height={14} />
             </div>
@@ -171,7 +171,7 @@ export function FloatingGallery() {
 
         <div className="card-scatter-4 absolute w-[260px] md:w-[280px] bg-white/60 backdrop-blur-xl border border-white/60 rounded-[28px] p-6 shadow-md opacity-0 transition-all duration-700 transition-spring delay-150 z-10 pointer-events-none">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-400">Configurar</span>
+            <span className="text-xs font-normal tracking-[0.2em] uppercase text-slate-500">Configurar</span>
             <div className="w-7 h-7 rounded-full bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-500">
               <Icon icon="solar:settings-linear" width={14} height={14} />
             </div>

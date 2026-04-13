@@ -120,7 +120,7 @@ export function Timeline() {
               }`}
             >
               <div className="relative bg-white rounded-2xl p-6 sm:p-8 md:p-10 shadow-skeuo border border-slate-100/80 transition-transform group-hover:-translate-y-2">
-                <div className="text-xs font-normal tracking-[0.25em] text-slate-400 uppercase mb-4">
+                <div className="text-xs font-normal tracking-[0.25em] text-slate-500 uppercase mb-4">
                   {p.number}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-normal text-slate-800 mb-4 tracking-tight">{p.title}</h3>

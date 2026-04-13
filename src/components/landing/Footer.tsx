@@ -36,7 +36,7 @@ export function Footer() {
               detección automática, política autogenerada y Google Consent Mode
               v2.
             </p>
-            <p className="mt-4 text-slate-400 text-xs font-light">
+            <p className="mt-4 text-slate-500 text-xs font-light">
               Un producto de Nubium Solutions.
             </p>
           </div>

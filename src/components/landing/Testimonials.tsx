@@ -55,7 +55,7 @@ export function Testimonials() {
                     <Icon key={i} icon="solar:star-bold" width={18} height={18} />
                   ))}
                 </div>
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{t.badge}</div>
+                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{t.badge}</div>
               </div>
               <p className="text-slate-700 text-base leading-8 font-light mb-10">&ldquo;{t.quote}&rdquo;</p>
             </div>
