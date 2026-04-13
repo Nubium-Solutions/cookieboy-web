@@ -7,17 +7,7 @@ const columns = [
     links: [
       { label: "Características", href: "/#caracteristicas" },
       { label: "Precios", href: "/#precios" },
-      { label: "Escáner", href: "/escaner" },
-      { label: "Diccionario", href: "/diccionario" },
-    ],
-  },
-  {
-    title: "Recursos",
-    links: [
-      { label: "Documentación", href: "/docs" },
-      { label: "Blog", href: "/blog" },
-      { label: "Changelog", href: "/changelog" },
-      { label: "Estado", href: "/status" },
+      { label: "Escáner", href: "/#escaner" },
     ],
   },
   {
@@ -51,7 +41,7 @@ export function Footer() {
             </p>
           </div>
           {columns.map((col) => (
-            <div key={col.title} className="md:col-span-2">
+            <div key={col.title} className="md:col-span-4">
               <h3 className="font-medium text-slate-900 mb-6 tracking-tight">{col.title}</h3>
               <ul className="space-y-4 text-sm text-slate-500">
                 {col.links.map((l) => (

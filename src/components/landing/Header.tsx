@@ -5,11 +5,9 @@ import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
 const navLinks = [
-  { label: "Producto", href: "/#producto" },
   { label: "Características", href: "/#caracteristicas" },
   { label: "Precios", href: "/#precios" },
-  { label: "Escáner", href: "/escaner" },
-  { label: "Blog", href: "/blog" },
+  { label: "Escáner", href: "/#escaner" },
 ];
 
 export function Header() {
