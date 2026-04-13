@@ -101,44 +101,94 @@ export function Hero() {
                   <div className="flex justify-between items-center mb-2 z-10">
                     <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.4)] animate-pulse" />
-                      <span className="text-xs font-medium text-slate-400 tracking-widest uppercase">Consentimientos</span>
+                      <span className="text-[10px] font-medium text-slate-500 tracking-widest uppercase">Consentimientos</span>
                     </div>
                     <div className="text-sm font-medium text-slate-800">
-                      1.248<span className="text-slate-400 font-normal text-xs ml-0.5">/mes</span>
+                      1.248<span className="text-slate-500 font-normal text-xs ml-0.5">/mes</span>
                     </div>
                   </div>
-                  <div className="flex-1 flex items-end gap-[3px] z-10 w-full pt-2">
-                    {[30, 45, 35, 55, 75, 100, 65, 45, 25, 40, 50, 35].map((h, i) => (
-                      <div
-                        key={i}
-                        className={`flex-1 rounded-t-sm transition-all ${
-                          h === 100 ? "bg-emerald-500/60 relative" : "bg-amber-500/" + (i % 3 === 0 ? "20" : i % 2 === 0 ? "30" : "15")
-                        }`}
-                        style={{ height: `${h}%` }}
-                      >
-                        {h === 100 && (
-                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-emerald-500 shadow-sm border border-white" />
-                        )}
-                      </div>
-                    ))}
+                  <div className="flex-1 relative z-10 pt-2">
+                    {(() => {
+                      const data = [32, 48, 40, 55, 38, 62, 70, 58, 72, 85, 78, 95, 88, 92, 76, 68, 82, 75];
+                      const max = Math.max(...data);
+                      const points = data
+                        .map((v, i) => {
+                          const x = (i / (data.length - 1)) * 100;
+                          const y = 100 - (v / max) * 90;
+                          return `${x},${y}`;
+                        })
+                        .join(" ");
+                      const area = `0,100 ${points} 100,100`;
+                      return (
+                        <div className="absolute inset-0 flex items-end gap-[2px]">
+                          {data.map((v, i) => (
+                            <div
+                              key={i}
+                              className="flex-1 rounded-t-[2px] bg-amber-400/20"
+                              style={{ height: `${(v / max) * 90}%` }}
+                            />
+                          ))}
+                          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <defs>
+                              <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                              </linearGradient>
+                            </defs>
+                            <polygon points={area} fill="url(#area-grad)" />
+                            <polyline
+                              points={points}
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                          <div
+                            className="absolute w-2 h-2 rounded-full bg-emerald-500 border-2 border-white shadow-md"
+                            style={{
+                              left: `calc(${(11 / (data.length - 1)) * 100}% - 4px)`,
+                              top: `calc(${100 - (95 / max) * 90}% - 4px)`,
+                            }}
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
                 {/* Auto-detection */}
-                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-sm p-4 border border-slate-100/80 flex flex-col justify-between relative overflow-hidden min-h-[120px] flex-1 group transition-all hover:-translate-y-1">
+                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-sm p-4 border border-slate-100/80 flex flex-col gap-3 relative overflow-hidden min-h-[120px] flex-1 group transition-all hover:-translate-y-1">
                   <div className="flex items-center justify-between z-10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-amber-50/80 flex items-center justify-center border border-amber-100/50 group-hover:rotate-12 group-hover:scale-110 transition-transform">
-                        <Icon icon="solar:shield-check-linear" width={14} height={14} className="text-amber-500" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-amber-50/80 flex items-center justify-center border border-amber-100/50">
+                        <Icon icon="solar:shield-check-linear" width={13} height={13} className="text-amber-600" />
                       </div>
                       <div>
-                        <div className="text-xs font-medium text-slate-800 tracking-tight">Detección automática</div>
-                        <p className="text-xs text-amber-600 font-normal mt-0.5">Activa · 12 cookies</p>
+                        <div className="text-[11px] font-medium text-slate-800 tracking-tight leading-tight">Detección automática</div>
+                        <p className="text-[10px] text-amber-600 font-normal leading-tight mt-0.5">12 cookies clasificadas</p>
                       </div>
                     </div>
-                    <div className="w-8 h-4 bg-amber-500 rounded-full relative shadow-inner">
+                    <div className="w-7 h-4 bg-emerald-500 rounded-full relative shadow-inner">
                       <div className="absolute right-[2px] top-[2px] w-3 h-3 bg-white rounded-full shadow-sm" />
                     </div>
+                  </div>
+                  <div className="flex flex-col gap-1 z-10">
+                    {[
+                      { name: "_ga", cat: "Analytics", color: "bg-blue-500" },
+                      { name: "_fbp", cat: "Marketing", color: "bg-rose-500" },
+                      { name: "PHPSESSID", cat: "Necessary", color: "bg-emerald-500" },
+                    ].map((c) => (
+                      <div key={c.name} className="flex items-center justify-between bg-slate-50/70 rounded-lg px-2.5 py-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-1.5 h-1.5 rounded-full ${c.color} shrink-0`} />
+                          <span className="font-mono text-[10px] text-slate-700 truncate">{c.name}</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500 uppercase tracking-wider shrink-0">{c.cat}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
