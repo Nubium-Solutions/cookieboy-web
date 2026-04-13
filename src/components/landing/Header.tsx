@@ -72,11 +72,11 @@ export function Header() {
 
         {/* Mobile menu */}
         <div
-          className={`md:hidden absolute left-4 right-4 mt-3 origin-top transition-all duration-300 ${
-            open ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+          className={`md:hidden absolute left-4 right-4 mt-3 transition-opacity duration-200 ${
+            open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
         >
-          <div className="bg-white/95 backdrop-blur-2xl border border-white/60 rounded-3xl shadow-xl p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-xl p-4">
             <nav className="flex flex-col gap-1">
               {navLinks.map((l) => (
                 <a
