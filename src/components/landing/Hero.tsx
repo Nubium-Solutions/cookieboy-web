@@ -37,7 +37,7 @@ export function Hero() {
         </div>
 
         {/* 3D Device Mockup with CookieBoy admin */}
-        <div className="relative perspective-1400 flex items-center justify-center mt-8 lg:mt-0 scale-[0.78] sm:scale-90 md:scale-100 origin-top">
+        <div className="relative perspective-1400 flex items-center justify-center mt-8 lg:mt-0 hero-mockup-scale">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[125%] h-[125%] bg-amber-400/10 rounded-full blur-[90px] -z-10 pointer-events-none" />
 
           <div className="animate-float relative w-[340px] h-[720px] mx-auto transform-gpu transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] hover:scale-[1.02] transform-style-3d">
