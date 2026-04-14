@@ -80,25 +80,41 @@ type DetectedTracker = {
   name: string;
   provider: string;
   category: "analytics" | "marketing" | "preferences" | "necessary";
+  kind: "tracker" | "plugin";
 };
 
-const TRACKERS: { pattern: RegExp; name: string; provider: string; category: DetectedTracker["category"] }[] = [
-  { pattern: /googletagmanager\.com\/gtm\.js|GTM-[A-Z0-9]+/i, name: "Google Tag Manager", provider: "Google", category: "analytics" },
-  { pattern: /google-analytics\.com|gtag\(|G-[A-Z0-9]{8,}|UA-\d+/i, name: "Google Analytics", provider: "Google", category: "analytics" },
-  { pattern: /connect\.facebook\.net|fbq\(/i, name: "Meta Pixel", provider: "Meta", category: "marketing" },
-  { pattern: /static\.hotjar\.com|hj\(/i, name: "Hotjar", provider: "Hotjar", category: "analytics" },
-  { pattern: /clarity\.ms/i, name: "Microsoft Clarity", provider: "Microsoft", category: "analytics" },
-  { pattern: /doubleclick\.net/i, name: "Google Ads", provider: "Google", category: "marketing" },
-  { pattern: /linkedin\.com\/insight|_linkedin_/i, name: "LinkedIn Insight", provider: "LinkedIn", category: "marketing" },
-  { pattern: /tiktok\.com\/i18n\/pixel|ttq\(/i, name: "TikTok Pixel", provider: "TikTok", category: "marketing" },
-  { pattern: /snap\.licdn\.com|snaptr\(/i, name: "Snap Pixel", provider: "Snapchat", category: "marketing" },
-  { pattern: /youtube\.com\/embed|youtube-nocookie/i, name: "YouTube Embed", provider: "Google", category: "marketing" },
-  { pattern: /platform\.twitter\.com/i, name: "Twitter Widget", provider: "X", category: "marketing" },
-  { pattern: /stripe\.com\/v3/i, name: "Stripe", provider: "Stripe", category: "necessary" },
-  { pattern: /recaptcha|gstatic\.com\/recaptcha/i, name: "reCAPTCHA", provider: "Google", category: "necessary" },
-  { pattern: /intercom|widget\.intercom\.io/i, name: "Intercom", provider: "Intercom", category: "preferences" },
-  { pattern: /hubspot|hs-scripts/i, name: "HubSpot", provider: "HubSpot", category: "marketing" },
-  { pattern: /mailchimp|list-manage\.com/i, name: "Mailchimp", provider: "Mailchimp", category: "marketing" },
+type DetectorKind = "tracker" | "plugin";
+
+const TRACKERS: { pattern: RegExp; name: string; provider: string; category: DetectedTracker["category"]; kind: DetectorKind }[] = [
+  // Analytics & ads (visible en UI como "Servicios de tracking")
+  { pattern: /googletagmanager\.com\/gtm\.js|GTM-[A-Z0-9]+/i, name: "Google Tag Manager", provider: "Google", category: "analytics", kind: "tracker" },
+  { pattern: /google-analytics\.com|gtag\(|G-[A-Z0-9]{8,}|UA-\d+/i, name: "Google Analytics", provider: "Google", category: "analytics", kind: "tracker" },
+  { pattern: /connect\.facebook\.net|fbq\(/i, name: "Meta Pixel", provider: "Meta", category: "marketing", kind: "tracker" },
+  { pattern: /static\.hotjar\.com|hj\(/i, name: "Hotjar", provider: "Hotjar", category: "analytics", kind: "tracker" },
+  { pattern: /clarity\.ms/i, name: "Microsoft Clarity", provider: "Microsoft", category: "analytics", kind: "tracker" },
+  { pattern: /doubleclick\.net/i, name: "Google Ads", provider: "Google", category: "marketing", kind: "tracker" },
+  { pattern: /linkedin\.com\/insight|_linkedin_/i, name: "LinkedIn Insight", provider: "LinkedIn", category: "marketing", kind: "tracker" },
+  { pattern: /tiktok\.com\/i18n\/pixel|ttq\(/i, name: "TikTok Pixel", provider: "TikTok", category: "marketing", kind: "tracker" },
+  { pattern: /snap\.licdn\.com|snaptr\(/i, name: "Snap Pixel", provider: "Snapchat", category: "marketing", kind: "tracker" },
+  { pattern: /youtube\.com\/embed|youtube-nocookie/i, name: "YouTube Embed", provider: "Google", category: "marketing", kind: "tracker" },
+  { pattern: /platform\.twitter\.com/i, name: "Twitter Widget", provider: "X", category: "marketing", kind: "tracker" },
+  { pattern: /stripe\.com\/v3/i, name: "Stripe", provider: "Stripe", category: "necessary", kind: "tracker" },
+  { pattern: /recaptcha|gstatic\.com\/recaptcha/i, name: "reCAPTCHA", provider: "Google", category: "necessary", kind: "tracker" },
+  { pattern: /intercom|widget\.intercom\.io/i, name: "Intercom", provider: "Intercom", category: "preferences", kind: "tracker" },
+  { pattern: /hubspot|hs-scripts/i, name: "HubSpot", provider: "HubSpot", category: "marketing", kind: "tracker" },
+  { pattern: /mailchimp|list-manage\.com/i, name: "Mailchimp", provider: "Mailchimp", category: "marketing", kind: "tracker" },
+  { pattern: /sourcebuster|sbjs[_.]|sbjs\.min\.js/i, name: "Sourcebuster", provider: "Sourcebuster", category: "analytics", kind: "tracker" },
+  // WordPress plugins (contribuyen cookies inferidas pero no "trackean" al usuario)
+  { pattern: /wp-content\/plugins\/woocommerce|woocommerce\.min\.js|wc-cart|wc_cart/i, name: "WooCommerce", provider: "WordPress", category: "necessary", kind: "plugin" },
+  { pattern: /cookieyes|cky-banner|ckyconsent/i, name: "CookieYes", provider: "CookieYes", category: "necessary", kind: "plugin" },
+  { pattern: /wp-content\/plugins\/cookieboy|wpcce_consent/i, name: "CookieBoy", provider: "CookieBoy", category: "necessary", kind: "plugin" },
+  { pattern: /wpbingo/i, name: "WPBingo", provider: "WPBingo", category: "preferences", kind: "plugin" },
+  { pattern: /wpc-smart-wishlist|woosw[-_]/i, name: "WPC Smart Wishlist", provider: "WPClever", category: "preferences", kind: "plugin" },
+  { pattern: /wp-content\/plugins\/wp-consent-api|wp-consent-level|wp_has_consent/i, name: "WP Consent API", provider: "WordPress", category: "necessary", kind: "plugin" },
+  { pattern: /wp-content\/plugins\/elementor|elementor-frontend/i, name: "Elementor", provider: "Elementor", category: "necessary", kind: "plugin" },
+  { pattern: /wp-content\/plugins\/contact-form-7|wpcf7-f[0-9]+/i, name: "Contact Form 7", provider: "WordPress", category: "necessary", kind: "plugin" },
+  { pattern: /jetpack-(?:block|comments|lazy)|wp-content\/plugins\/jetpack/i, name: "Jetpack", provider: "Automattic", category: "analytics", kind: "plugin" },
+  { pattern: /__cf_bm|cf-ray|cloudflare/i, name: "Cloudflare", provider: "Cloudflare", category: "necessary", kind: "plugin" },
 ];
 
 type InferredCookie = {
@@ -161,18 +177,78 @@ const TRACKER_COOKIES: Record<string, InferredCookie[]> = {
     { name: "__stripe_mid", domain: "stripe.com", expires: "1 año", purpose: "Detección de fraude en pagos.", category: "necessary", provider: "Stripe" },
     { name: "__stripe_sid", domain: "stripe.com", expires: "30 minutos", purpose: "Sesión temporal de pagos Stripe.", category: "necessary", provider: "Stripe" },
   ],
+  "Sourcebuster": [
+    { name: "sbjs_current", domain: "", expires: "6 meses", purpose: "Registra la fuente, medio y campaña de tráfico de la visita actual.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_current_add", domain: "", expires: "6 meses", purpose: "Datos complementarios de la fuente de tráfico actual.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_first", domain: "", expires: "6 meses", purpose: "Registra la primera fuente de tráfico con la que el visitante llegó.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_first_add", domain: "", expires: "6 meses", purpose: "Datos complementarios de la primera visita.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_session", domain: "", expires: "30 minutos", purpose: "Identifica la sesión activa del visitante.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_udata", domain: "", expires: "6 meses", purpose: "Navegador, sistema operativo y resolución del visitante.", category: "analytics", provider: "Sourcebuster" },
+    { name: "sbjs_migrations", domain: "", expires: "6 meses", purpose: "Control de migraciones del formato de datos de Sourcebuster.", category: "analytics", provider: "Sourcebuster" },
+  ],
+  "WooCommerce": [
+    { name: "woocommerce_cart_hash", domain: "", expires: "Sesión", purpose: "Verifica si el carrito ha cambiado para actualizar la caché.", category: "necessary", provider: "WooCommerce" },
+    { name: "woocommerce_items_in_cart", domain: "", expires: "Sesión", purpose: "Indica que hay productos en el carrito para mostrar el widget.", category: "necessary", provider: "WooCommerce" },
+    { name: "wp_woocommerce_session_*", domain: "", expires: "2 días", purpose: "Mantiene el carrito y la sesión del usuario en WooCommerce.", category: "necessary", provider: "WooCommerce" },
+  ],
+  "CookieYes": [
+    { name: "cookieyes-consent", domain: "", expires: "1 año", purpose: "Almacena las preferencias de consentimiento de cookies del visitante.", category: "necessary", provider: "CookieYes" },
+  ],
+  "CookieBoy": [
+    { name: "wpcce_consent", domain: "", expires: "1 año", purpose: "Almacena las categorías de cookies aceptadas o rechazadas.", category: "necessary", provider: "CookieBoy" },
+    { name: "wpcce_consent_id", domain: "", expires: "1 año", purpose: "Identificador único del consentimiento para auditoría.", category: "necessary", provider: "CookieBoy" },
+    { name: "wpcce_consent_date", domain: "", expires: "1 año", purpose: "Fecha en que se otorgó el consentimiento.", category: "necessary", provider: "CookieBoy" },
+  ],
+  "WPBingo": [
+    { name: "wpbingo_recently_viewed", domain: "", expires: "Sesión", purpose: "Almacena los productos visitados recientemente.", category: "preferences", provider: "WPBingo" },
+  ],
+  "WPC Smart Wishlist": [
+    { name: "woosw_key", domain: "", expires: "Sesión", purpose: "Clave de la lista de deseos del usuario.", category: "preferences", provider: "WPClever" },
+    { name: "woosw_key_ori", domain: "", expires: "19 días", purpose: "Identifica la sesión única para la lista de deseos.", category: "preferences", provider: "WPClever" },
+  ],
+  "WP Consent API": [
+    { name: "wp_consent_functional", domain: "", expires: "1 año", purpose: "Registra el consentimiento para cookies funcionales.", category: "necessary", provider: "WordPress" },
+    { name: "wp_consent_preferences", domain: "", expires: "1 año", purpose: "Registra el consentimiento para cookies de preferencias.", category: "necessary", provider: "WordPress" },
+    { name: "wp_consent_statistics", domain: "", expires: "1 año", purpose: "Registra el consentimiento para cookies estadísticas.", category: "necessary", provider: "WordPress" },
+    { name: "wp_consent_statistics-anonymous", domain: "", expires: "1 año", purpose: "Registra el consentimiento para estadísticas anónimas.", category: "necessary", provider: "WordPress" },
+    { name: "wp_consent_marketing", domain: "", expires: "1 año", purpose: "Registra el consentimiento para cookies de marketing.", category: "necessary", provider: "WordPress" },
+  ],
+  "Cloudflare": [
+    { name: "__cf_bm", domain: "", expires: "30 minutos", purpose: "Protege el sitio frente a bots automatizados.", category: "necessary", provider: "Cloudflare" },
+    { name: "cf_clearance", domain: "", expires: "30 días", purpose: "Valida que el visitante ha pasado los retos anti-bot.", category: "necessary", provider: "Cloudflare" },
+  ],
+  "Jetpack": [
+    { name: "tk_ai", domain: "", expires: "Sesión", purpose: "Identificador anónimo para analítica de Jetpack.", category: "analytics", provider: "Automattic" },
+    { name: "tk_lr", domain: "", expires: "1 año", purpose: "Referer inicial del usuario en Jetpack Stats.", category: "analytics", provider: "Automattic" },
+    { name: "tk_or", domain: "", expires: "5 años", purpose: "Referer original del usuario en Jetpack Stats.", category: "analytics", provider: "Automattic" },
+  ],
+  "Elementor": [
+    { name: "elementor", domain: "", expires: "Sesión", purpose: "Mantiene el estado del editor de Elementor.", category: "necessary", provider: "Elementor" },
+  ],
 };
 
-function mergeInferredCookies(trackerNames: string[], cookies: Map<string, DetectedCookie>) {
+function nameMatchesPattern(name: string, pattern: string): boolean {
+  if (!pattern.includes("*")) return name === pattern;
+  const re = new RegExp(
+    "^" + pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$"
+  );
+  return re.test(name);
+}
+
+function mergeInferredCookies(trackerNames: string[], cookies: Map<string, DetectedCookie>, siteHost: string) {
+  const existingNames = [...cookies.values()].map((c) => c.name);
   for (const trackerName of trackerNames) {
     const inferred = TRACKER_COOKIES[trackerName];
     if (!inferred) continue;
     for (const c of inferred) {
-      const key = `${c.name}|${c.domain}`;
+      const domain = c.domain || siteHost;
+      const alreadyHttp = existingNames.some((n) => nameMatchesPattern(n, c.name));
+      if (alreadyHttp) continue;
+      const key = `${c.name}|${domain}`;
       if (cookies.has(key)) continue;
       cookies.set(key, {
         name: c.name,
-        domain: c.domain,
+        domain,
         expires: c.expires,
         secure: false,
         http_only: false,
@@ -270,7 +346,7 @@ function parseSetCookies(headers: Headers, pageHost: string, pageUrl: string, ma
 function detectTrackers(html: string, found: Map<string, DetectedTracker>) {
   for (const t of TRACKERS) {
     if (!found.has(t.name) && t.pattern.test(html)) {
-      found.set(t.name, { name: t.name, provider: t.provider, category: t.category });
+      found.set(t.name, { name: t.name, provider: t.provider, category: t.category, kind: t.kind });
     }
   }
 }
@@ -444,11 +520,11 @@ export async function POST(req: NextRequest) {
             visited: visited.size,
             queue: queue.length,
             cookies: cookies.size,
-            trackers: trackers.size,
+            trackers: [...trackers.values()].filter((t) => t.kind === "tracker").length,
           });
         }
 
-        mergeInferredCookies([...trackers.keys()], cookies);
+        mergeInferredCookies([...trackers.keys()], cookies, base.hostname);
         const dict = await loadDictionary();
         for (const c of cookies.values()) {
           const entry = lookupDict(c.name, dict);
@@ -459,7 +535,8 @@ export async function POST(req: NextRequest) {
           c.expires = c.expires ?? entry.duration;
         }
         const cookiesArr = [...cookies.values()];
-        const trackersArr = [...trackers.values()];
+        const trackersArr = [...trackers.values()].filter((t) => t.kind === "tracker");
+        const pluginsArr = [...trackers.values()].filter((t) => t.kind === "plugin");
         const score = computeScore({
           cookies: cookiesArr.length,
           trackers: trackersArr.length,
@@ -478,6 +555,7 @@ export async function POST(req: NextRequest) {
           timed_out: timedOut,
           cookies: cookiesArr,
           trackers: trackersArr,
+          plugins: pluginsArr,
           checks: { has_banner: hasBanner, has_policy: hasPolicy },
           score,
         });
