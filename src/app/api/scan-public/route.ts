@@ -85,7 +85,17 @@ type DetectedTracker = {
 
 type DetectorKind = "tracker" | "plugin";
 
-const TRACKERS: { pattern: RegExp; name: string; provider: string; category: DetectedTracker["category"]; kind: DetectorKind }[] = [
+type Detector = {
+  pattern: RegExp;
+  name: string;
+  provider: string;
+  category: DetectedTracker["category"];
+  kind: DetectorKind;
+  family?: string;
+  priority?: number;
+};
+
+const TRACKERS: Detector[] = [
   // Analytics & ads (visible en UI como "Servicios de tracking")
   { pattern: /googletagmanager\.com\/gtm\.js|GTM-[A-Z0-9]+/i, name: "Google Tag Manager", provider: "Google", category: "analytics", kind: "tracker" },
   { pattern: /google-analytics\.com|gtag\(|G-[A-Z0-9]{8,}|UA-\d+/i, name: "Google Analytics", provider: "Google", category: "analytics", kind: "tracker" },
@@ -100,22 +110,39 @@ const TRACKERS: { pattern: RegExp; name: string; provider: string; category: Det
   { pattern: /platform\.twitter\.com/i, name: "Twitter Widget", provider: "X", category: "marketing", kind: "tracker" },
   { pattern: /stripe\.com\/v3/i, name: "Stripe", provider: "Stripe", category: "necessary", kind: "tracker" },
   { pattern: /recaptcha|gstatic\.com\/recaptcha/i, name: "reCAPTCHA", provider: "Google", category: "necessary", kind: "tracker" },
-  { pattern: /intercom|widget\.intercom\.io/i, name: "Intercom", provider: "Intercom", category: "preferences", kind: "tracker" },
-  { pattern: /hubspot|hs-scripts/i, name: "HubSpot", provider: "HubSpot", category: "marketing", kind: "tracker" },
-  { pattern: /mailchimp|list-manage\.com/i, name: "Mailchimp", provider: "Mailchimp", category: "marketing", kind: "tracker" },
-  { pattern: /sourcebuster|sbjs[_.]|sbjs\.min\.js/i, name: "Sourcebuster", provider: "Sourcebuster", category: "analytics", kind: "tracker" },
+  { pattern: /widget\.intercom\.io|intercomcdn\.com/i, name: "Intercom", provider: "Intercom", category: "preferences", kind: "tracker" },
+  { pattern: /js\.hs-scripts\.com|js\.hubspot\.com/i, name: "HubSpot", provider: "HubSpot", category: "marketing", kind: "tracker" },
+  { pattern: /chimpstatic\.com|list-manage\.com/i, name: "Mailchimp", provider: "Mailchimp", category: "marketing", kind: "tracker" },
+  { pattern: /sourcebuster|sbjs\.min\.js|sbjs_(?:current|first|session|udata|migrations)/i, name: "Sourcebuster", provider: "Sourcebuster", category: "analytics", kind: "tracker" },
   // WordPress plugins (contribuyen cookies inferidas pero no "trackean" al usuario)
   { pattern: /wp-content\/plugins\/woocommerce|woocommerce\.min\.js|wc-cart|wc_cart/i, name: "WooCommerce", provider: "WordPress", category: "necessary", kind: "plugin" },
-  { pattern: /cookieyes|cky-banner|ckyconsent/i, name: "CookieYes", provider: "CookieYes", category: "necessary", kind: "plugin" },
-  { pattern: /wp-content\/plugins\/cookieboy|wpcce_consent/i, name: "CookieBoy", provider: "CookieBoy", category: "necessary", kind: "plugin" },
-  { pattern: /wpbingo/i, name: "WPBingo", provider: "WPBingo", category: "preferences", kind: "plugin" },
-  { pattern: /wpc-smart-wishlist|woosw[-_]/i, name: "WPC Smart Wishlist", provider: "WPClever", category: "preferences", kind: "plugin" },
+  // Consent managers — mutuamente exclusivos
+  { pattern: /wp-content\/plugins\/cookie-law-info|cky-consent|cky-banner|cookieyes\.com/i, name: "CookieYes", provider: "CookieYes", category: "necessary", kind: "plugin", family: "consent_manager", priority: 10 },
+  { pattern: /wp-content\/plugins\/cookieboy|wpcce[_-](?:consent|banner)/i, name: "CookieBoy", provider: "CookieBoy", category: "necessary", kind: "plugin", family: "consent_manager", priority: 20 },
+  { pattern: /wp-content\/plugins\/complianz|cmplz-/i, name: "Complianz", provider: "Complianz", category: "necessary", kind: "plugin", family: "consent_manager", priority: 10 },
+  { pattern: /wp-content\/themes\/wpbingo\b|wpbingo[_-]/i, name: "WPBingo", provider: "WPBingo", category: "preferences", kind: "plugin" },
+  { pattern: /wp-content\/plugins\/wpc-smart-wishlist|woosw[-_]/i, name: "WPC Smart Wishlist", provider: "WPClever", category: "preferences", kind: "plugin" },
   { pattern: /wp-content\/plugins\/wp-consent-api|wp-consent-level|wp_has_consent/i, name: "WP Consent API", provider: "WordPress", category: "necessary", kind: "plugin" },
   { pattern: /wp-content\/plugins\/elementor|elementor-frontend/i, name: "Elementor", provider: "Elementor", category: "necessary", kind: "plugin" },
   { pattern: /wp-content\/plugins\/contact-form-7|wpcf7-f[0-9]+/i, name: "Contact Form 7", provider: "WordPress", category: "necessary", kind: "plugin" },
   { pattern: /jetpack-(?:block|comments|lazy)|wp-content\/plugins\/jetpack/i, name: "Jetpack", provider: "Automattic", category: "analytics", kind: "plugin" },
-  { pattern: /__cf_bm|cf-ray|cloudflare/i, name: "Cloudflare", provider: "Cloudflare", category: "necessary", kind: "plugin" },
+  { pattern: /__cf_bm|cf-ray|cdn-cgi\/challenge-platform/i, name: "Cloudflare", provider: "Cloudflare", category: "necessary", kind: "plugin" },
 ];
+
+function resolveFamilies(found: Map<string, DetectedTracker>) {
+  const byFamily = new Map<string, { name: string; priority: number }>();
+  for (const det of TRACKERS) {
+    if (!det.family || !found.has(det.name)) continue;
+    const cur = byFamily.get(det.family);
+    const pr = det.priority ?? 0;
+    if (!cur || pr > cur.priority) byFamily.set(det.family, { name: det.name, priority: pr });
+  }
+  for (const det of TRACKERS) {
+    if (!det.family || !found.has(det.name)) continue;
+    const winner = byFamily.get(det.family);
+    if (winner && winner.name !== det.name) found.delete(det.name);
+  }
+}
 
 type InferredCookie = {
   name: string;
@@ -530,6 +557,7 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        resolveFamilies(trackers);
         mergeInferredCookies([...trackers.keys()], cookies, base.hostname);
         const dict = await loadDictionary();
         for (const c of cookies.values()) {

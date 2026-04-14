@@ -254,7 +254,10 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
 
           {result.cookies.length > 0 && (
             <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-6">Cookies detectadas ({result.cookies.length})</h3>
+              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-2">Cookies detectadas ({result.cookies.length})</h3>
+              <p className="text-xs text-slate-500 font-light mb-6 max-w-2xl">
+                Las cookies marcadas como <span className="text-amber-700 font-medium">INFERIDA</span> se deducen de los plugins y servicios detectados en el HTML, no de cabeceras HTTP reales. Verifica tu instalación antes de publicarlas en tu política de cookies.
+              </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
