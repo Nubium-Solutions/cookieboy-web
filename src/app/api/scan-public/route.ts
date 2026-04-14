@@ -1,5 +1,17 @@
 import { NextRequest } from "next/server";
 import { promises as fs } from "fs";
+import { Agent, setGlobalDispatcher } from "undici";
+
+// Pool con keep-alive y 64 conexiones/origen para aprovechar la concurrencia
+// en crawls same-host (por defecto undici limita a 10/origen).
+setGlobalDispatcher(
+  new Agent({
+    connections: 64,
+    keepAliveTimeout: 30_000,
+    keepAliveMaxTimeout: 60_000,
+    pipelining: 1,
+  })
+);
 
 export const maxDuration = 300;
 
@@ -265,7 +277,7 @@ function mergeInferredCookies(trackerNames: string[], cookies: Map<string, Detec
 
 const MAX_TOTAL_MS = 600_000;
 const PER_REQ_MS = 6000;
-const CONCURRENCY = 8;
+const CONCURRENCY = 24;
 const HARD_CAP = 5000;
 const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|mp4|mp3|avi|mov|wav|woff2?|ttf|eot|json|xml|rss)(\?|$)/i;
 
@@ -344,8 +356,10 @@ function parseSetCookies(headers: Headers, pageHost: string, pageUrl: string, ma
 }
 
 function detectTrackers(html: string, found: Map<string, DetectedTracker>) {
+  if (found.size === TRACKERS.length) return;
   for (const t of TRACKERS) {
-    if (!found.has(t.name) && t.pattern.test(html)) {
+    if (found.has(t.name)) continue;
+    if (t.pattern.test(html)) {
       found.set(t.name, { name: t.name, provider: t.provider, category: t.category, kind: t.kind });
     }
   }
@@ -368,7 +382,7 @@ function detectPolicy(html: string): boolean {
   return /pol[ií]tica[- ]?de[- ]?cookies|cookie[- ]?policy|\/cookies["'\/]/i.test(html);
 }
 
-const MAX_BODY_BYTES = 3_000_000;
+const MAX_BODY_BYTES = 1_000_000;
 const MAX_REDIRECTS = 3;
 
 async function fetchOne(url: string, baseHost: string): Promise<{ html: string; headers: Headers } | null> {
@@ -480,6 +494,7 @@ export async function POST(req: NextRequest) {
       const send = (obj: unknown) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
       const start = Date.now();
       const queue: string[] = [base.toString()];
+      const queued = new Set<string>([base.toString()]);
       const visited = new Set<string>();
       const cookies = new Map<string, DetectedCookie>();
       const trackers = new Map<string, DetectedTracker>();
@@ -509,7 +524,10 @@ export async function POST(req: NextRequest) {
               if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
               if (visited.size < HARD_CAP) {
                 for (const link of extractLinks(r.html, base)) {
-                  if (!visited.has(link) && !queue.includes(link)) queue.push(link);
+                  if (!visited.has(link) && !queued.has(link)) {
+                    queue.push(link);
+                    queued.add(link);
+                  }
                 }
               }
             }
