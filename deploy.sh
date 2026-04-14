@@ -12,7 +12,7 @@ if [ "$BEFORE" = "$AFTER" ]; then
 fi
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy $BEFORE -> $AFTER"
-npm ci
+npm install --no-audit --no-fund
 npm run build
 pm2 describe cookieboy-web >/dev/null 2>&1 \
   && pm2 restart cookieboy-web --update-env \
