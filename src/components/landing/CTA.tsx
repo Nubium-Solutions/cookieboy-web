@@ -14,7 +14,7 @@ export function CTA() {
       </p>
       <div className="relative z-10">
         <a
-          href="/registro"
+          href="#precios"
           className="cta-btn text-lg py-4 px-10 shadow-lg font-medium text-slate-900 bg-white/70 border border-white/90 rounded-full backdrop-blur-md transition-all hover:-translate-y-1 overflow-hidden relative inline-flex items-center justify-center"
         >
           Probar gratis

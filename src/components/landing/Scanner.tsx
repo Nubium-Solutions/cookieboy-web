@@ -313,7 +313,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
                 Instala el plugin en WordPress y gestiona banner, política, consentimientos y Consent Mode v2 en minutos.
               </p>
               <Link
-                href="/registro"
+                href="#precios"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors"
               >
                 Probar gratis 14 días

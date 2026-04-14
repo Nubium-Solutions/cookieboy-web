@@ -1,6 +1,9 @@
 import { Icon } from "@iconify/react";
 
+const CHECKOUT_BASE = "https://licencias.nubiumsolutions.com/api/stripe/checkout";
+
 type Plan = {
+  slug: string;
   name: string;
   price: string;
   period: string;
@@ -12,58 +15,62 @@ type Plan = {
 
 const plans: Plan[] = [
   {
+    slug: "bronce",
     name: "Bronce",
-    price: "9€",
-    period: "/mes",
+    price: "30€",
+    period: "/año",
     description: "Para webs pequeñas que empiezan a cumplir.",
-    features: ["1 dominio", "Hasta 100 URLs", "Banner básico", "7 idiomas", "Soporte por email"],
+    features: ["200 URLs rastreadas", "1 dominio", "Detección automática", "Banner básico", "Soporte por email"],
     cta: "Empezar",
   },
   {
+    slug: "plata",
     name: "Plata",
-    price: "19€",
-    period: "/mes",
+    price: "50€",
+    period: "/año",
     description: "Para profesionales y pymes con más tráfico.",
     features: [
-      "3 dominios",
-      "Hasta 500 URLs",
+      "1.200 URLs rastreadas",
+      "1 dominio",
       "Banner personalizable",
+      "Política autogenerada",
       "Google Consent Mode v2",
-      "Analítica de consentimientos",
       "Soporte prioritario",
     ],
     highlighted: true,
-    cta: "Empezar 14 días gratis",
+    cta: "Empezar",
   },
   {
+    slug: "oro",
     name: "Oro",
-    price: "39€",
-    period: "/mes",
+    price: "110€",
+    period: "/año",
     description: "Para agencias que gestionan webs de clientes.",
     features: [
-      "10 dominios",
-      "URLs ilimitadas",
-      "Banner white-label",
-      "Informes PDF de cumplimiento",
-      "Consultoría de instalación",
+      "2.400 URLs rastreadas",
+      "3 dominios",
+      "Auto-bloqueo de scripts",
+      "Diccionario ampliado",
+      "Multi-idioma",
       "Soporte 24h",
     ],
     cta: "Empezar",
   },
   {
+    slug: "platino",
     name: "Platino",
-    price: "99€",
-    period: "/mes",
+    price: "230€",
+    period: "/año",
     description: "Para consultores LOPD y grandes organizaciones.",
     features: [
-      "Dominios ilimitados",
       "URLs ilimitadas",
-      "API privada",
-      "Diccionario privado",
+      "10 dominios",
+      "Onboarding personalizado",
+      "Soporte 24/7",
       "SLA 99.9%",
-      "Account manager dedicado",
+      "Account manager",
     ],
-    cta: "Hablar con ventas",
+    cta: "Empezar",
   },
 ];
 
@@ -108,16 +115,16 @@ export function Pricing() {
                 </li>
               ))}
             </ul>
-            <button
-              type="button"
-              className={`w-full py-3 rounded-xl font-medium transition-colors relative z-10 ${
+            <a
+              href={`${CHECKOUT_BASE}?plan=${plan.slug}&cycle=yearly`}
+              className={`w-full py-3 rounded-xl font-medium transition-colors relative z-10 text-center ${
                 plan.highlighted
                   ? "bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
                   : "border border-slate-300 text-slate-700 hover:bg-white/50"
               }`}
             >
               {plan.cta}
-            </button>
+            </a>
           </div>
         ))}
       </div>

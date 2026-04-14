@@ -78,7 +78,7 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <a
-              href="/login"
+              href="https://licencias.nubiumsolutions.com/cliente/login"
               className="hidden sm:inline-flex items-center justify-center px-6 py-2.5 text-xs font-medium text-white uppercase tracking-widest bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:-translate-y-0.5"
             >
               Acceder
@@ -114,7 +114,7 @@ export function Header() {
                 </a>
               ))}
               <a
-                href="/login"
+                href="https://licencias.nubiumsolutions.com/cliente/login"
                 onClick={() => setOpen(false)}
                 className="mt-2 px-5 py-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-2xl transition-colors uppercase tracking-widest text-center"
               >
