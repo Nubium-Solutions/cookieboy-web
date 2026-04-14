@@ -1,17 +1,5 @@
 import { NextRequest } from "next/server";
 import { promises as fs } from "fs";
-import { Agent, setGlobalDispatcher } from "undici";
-
-// Pool con keep-alive y 64 conexiones/origen para aprovechar la concurrencia
-// en crawls same-host (por defecto undici limita a 10/origen).
-setGlobalDispatcher(
-  new Agent({
-    connections: 64,
-    keepAliveTimeout: 30_000,
-    keepAliveMaxTimeout: 60_000,
-    pipelining: 1,
-  })
-);
 
 export const maxDuration = 300;
 
