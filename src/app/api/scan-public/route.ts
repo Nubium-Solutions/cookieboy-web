@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { promises as fs } from "fs";
+import type { BrowserContext, Page } from "playwright";
+import { getBrowser } from "@/lib/scanner-browser";
 
 export const maxDuration = 300;
+export const runtime = "nodejs";
 
 type DictEntry = {
   cat: "necessary" | "analytics" | "marketing" | "preferences";
@@ -290,10 +293,10 @@ function mergeInferredCookies(trackerNames: string[], cookies: Map<string, Detec
   }
 }
 
-const MAX_TOTAL_MS = 600_000;
-const PER_REQ_MS = 6000;
-const CONCURRENCY = 24;
-const HARD_CAP = 5000;
+const MAX_TOTAL_MS = 180_000;
+const PER_REQ_MS = 15_000;
+const CONCURRENCY = 5;
+const HARD_CAP = 100;
 const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|mp4|mp3|avi|mov|wav|woff2?|ttf|eot|json|xml|rss)(\?|$)/i;
 
 function isPrivateHost(host: string): boolean {
@@ -334,42 +337,6 @@ function extractLinks(html: string, base: URL): string[] {
   return [...out];
 }
 
-function parseSetCookies(headers: Headers, pageHost: string, pageUrl: string, map: Map<string, DetectedCookie>) {
-  const h = headers as Headers & { getSetCookie?: () => string[] };
-  const raw: string[] = typeof h.getSetCookie === "function" ? h.getSetCookie() : [];
-  for (const line of raw) {
-    const parts = line.split(";").map((s) => s.trim());
-    const [kv, ...attrs] = parts;
-    const eq = kv.indexOf("=");
-    if (eq < 0) continue;
-    const name = kv.slice(0, eq).trim();
-    let domain = pageHost;
-    let expires: string | undefined;
-    let secure = false;
-    let httpOnly = false;
-    for (const a of attrs) {
-      const [k, v] = a.split("=").map((s) => s.trim());
-      const kl = (k || "").toLowerCase();
-      if (kl === "domain" && v) domain = v.replace(/^\./, "");
-      else if (kl === "expires" && v) expires = v;
-      else if (kl === "max-age" && v) {
-        const secs = parseInt(v, 10);
-        if (!Number.isNaN(secs)) expires = new Date(Date.now() + secs * 1000).toUTCString();
-      } else if (kl === "secure") secure = true;
-      else if (kl === "httponly") httpOnly = true;
-    }
-    const key = `${name}|${domain}`;
-    const existing = map.get(key);
-    if (existing) {
-      if (existing.found_on.length < 5 && !existing.found_on.includes(pageUrl)) {
-        existing.found_on.push(pageUrl);
-      }
-    } else {
-      map.set(key, { name, domain, expires, secure, http_only: httpOnly, found_on: [pageUrl], source: "http" });
-    }
-  }
-}
-
 function detectTrackers(html: string, found: Map<string, DetectedTracker>) {
   if (found.size === TRACKERS.length) return;
   for (const t of TRACKERS) {
@@ -390,74 +357,122 @@ function computeScore(opts: { cookies: number; trackers: number; hasBanner: bool
 }
 
 function detectBanner(html: string): boolean {
-  return /cookie[- ]?consent|cookie[- ]?banner|cookie[- ]?notice|aviso[- ]?de[- ]?cookies|gdpr|cookiebot|onetrust|cookieboy|iubenda/i.test(html);
+  // Texto visible / clases DOM de banners server-rendered
+  if (/cookie[- ]?consent|cookie[- ]?banner|cookie[- ]?notice|aviso[- ]?de[- ]?cookies|gdpr|cookiebot|onetrust|cookieboy|iubenda|cookieyes|cky-consent|cky-banner|cookie-law-info|complianz|cmplz-|termly|didomi|quantcast|klaro|axeptio|osano/i.test(html)) return true;
+  // Scripts de CMPs que inyectan el banner via JS
+  if (/\/wp-content\/plugins\/(?:cookie-law-info|cookie-notice|complianz|cookieyes|gdpr-cookie|real-cookie-banner|cookiebot|cookieboy|wp-cookie-consent-eu|iubenda-cookie-law-solution|borlabs-cookie)/i.test(html)) return true;
+  if (/(?:consent\.cookiebot\.com|app\.cookieyes\.com|cdn\.iubenda\.com|cdn\.cookielaw\.org|cdn\.termly\.io|sdk\.privacy-center\.org)/i.test(html)) return true;
+  return false;
+}
+
+function hasConsentManagerFamily(trackers: Map<string, DetectedTracker>): boolean {
+  for (const det of TRACKERS) {
+    if (det.family === "consent_manager" && trackers.has(det.name)) return true;
+  }
+  return false;
 }
 
 function detectPolicy(html: string): boolean {
   return /pol[ií]tica[- ]?de[- ]?cookies|cookie[- ]?policy|\/cookies["'\/]/i.test(html);
 }
 
-const MAX_BODY_BYTES = 1_000_000;
-const MAX_REDIRECTS = 3;
+type FetchResult = {
+  html: string;
+  bannerVisible: boolean;
+};
 
-async function fetchOne(url: string, baseHost: string): Promise<{ html: string; headers: Headers } | null> {
-  const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), PER_REQ_MS);
+const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CookieBoy-Scanner/1.0";
+
+const BANNER_SELECTORS = [
+  '[id*="cookie" i]',
+  '[class*="cookie" i]',
+  '[id*="consent" i]',
+  '[class*="consent" i]',
+  '[id*="gdpr" i]',
+  '[class*="gdpr" i]',
+  '[id*="cky-" i]',
+  '[class*="cky-" i]',
+  '#CybotCookiebotDialog',
+  '#onetrust-banner-sdk',
+  '#onetrust-consent-sdk',
+  '.cmplz-cookiebanner',
+  '#cookieboy-banner',
+  '[class*="cmplz-"]',
+  '.cc-window',
+  '.cc-banner',
+  '.iubenda-cs-container',
+  '[aria-label*="cookie" i]',
+  '[role="dialog"][aria-label*="consent" i]',
+];
+
+async function fetchOne(url: string, baseHost: string, context: BrowserContext): Promise<FetchResult | null> {
   try {
-    let current = url;
-    let res: Response | null = null;
-    for (let i = 0; i <= MAX_REDIRECTS; i++) {
-      try {
-        const u = new URL(current);
-        if (isPrivateHost(u.hostname)) return null;
-        if (u.hostname !== baseHost) return null;
-      } catch {
-        return null;
+    const u = new URL(url);
+    if (isPrivateHost(u.hostname)) return null;
+    if (u.hostname !== baseHost) return null;
+  } catch {
+    return null;
+  }
+
+  let page: Page | null = null;
+  try {
+    page = await context.newPage();
+    page.setDefaultNavigationTimeout(PER_REQ_MS);
+    page.setDefaultTimeout(PER_REQ_MS);
+
+    // Bloquear recursos pesados para acelerar
+    await page.route("**/*", (route) => {
+      const type = route.request().resourceType();
+      if (type === "image" || type === "media" || type === "font") return route.abort();
+      return route.continue();
+    });
+
+    const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: PER_REQ_MS });
+    if (!response || response.status() >= 400) return null;
+
+    // Esperar a que el banner JS tenga tiempo de inyectarse
+    await page.waitForTimeout(1500);
+
+    const html = await page.content();
+
+    const bannerVisible = await page.evaluate((selectors: string[]) => {
+      for (const sel of selectors) {
+        try {
+          const els = document.querySelectorAll(sel);
+          for (const el of Array.from(els)) {
+            const he = el as HTMLElement;
+            if (!he.offsetParent && getComputedStyle(he).position !== "fixed") continue;
+            const style = getComputedStyle(he);
+            if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) continue;
+            if (he.offsetHeight < 20 || he.offsetWidth < 50) continue;
+            const text = (he.innerText || "").toLowerCase();
+            if (text.includes("cookie") || text.includes("consent") || text.includes("rgpd") || text.includes("gdpr") || text.includes("privacidad") || text.includes("aceptar") || text.includes("accept")) {
+              return true;
+            }
+          }
+        } catch {}
       }
-      res = await fetch(current, {
-        headers: { "User-Agent": "CookieBoy-Scanner/1.0 (+https://cookieboy.es)" },
-        redirect: "manual",
-        signal: ctrl.signal,
-      });
-      if (res.status >= 300 && res.status < 400) {
-        const loc = res.headers.get("location");
-        if (!loc) return null;
-        current = new URL(loc, current).toString();
-        continue;
-      }
-      break;
-    }
-    if (!res || !res.ok) return null;
-    const ct = res.headers.get("content-type") ?? "";
-    const cl = parseInt(res.headers.get("content-length") ?? "0", 10);
-    if (cl > MAX_BODY_BYTES) return { html: "", headers: res.headers };
-    if (!ct.includes("text/html")) return { html: "", headers: res.headers };
-    const reader = res.body?.getReader();
-    if (!reader) return { html: "", headers: res.headers };
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > MAX_BODY_BYTES) {
-        try { await reader.cancel(); } catch {}
-        break;
-      }
-      chunks.push(value);
-    }
-    const merged = new Uint8Array(total);
-    let offset = 0;
-    for (const c of chunks) {
-      merged.set(c, offset);
-      offset += c.byteLength;
-    }
-    return { html: new TextDecoder().decode(merged), headers: res.headers };
+      return false;
+    }, BANNER_SELECTORS);
+
+    return { html, bannerVisible };
   } catch {
     return null;
   } finally {
-    clearTimeout(to);
+    if (page) await page.close().catch(() => {});
   }
+}
+
+function playwrightCookieExpiry(expires: number): string | undefined {
+  if (!expires || expires <= 0) return "Sesión";
+  const ms = expires * 1000;
+  const now = Date.now();
+  if (ms <= now) return undefined;
+  const days = Math.round((ms - now) / (24 * 60 * 60 * 1000));
+  if (days >= 365) return `${Math.round(days / 365)} año${Math.round(days / 365) > 1 ? "s" : ""}`;
+  if (days >= 30) return `${Math.round(days / 30)} mes${Math.round(days / 30) > 1 ? "es" : ""}`;
+  if (days >= 1) return `${days} día${days > 1 ? "s" : ""}`;
+  return "<1 día";
 }
 
 export async function POST(req: NextRequest) {
@@ -518,7 +533,18 @@ export async function POST(req: NextRequest) {
 
       send({ type: "start", url: base.toString(), host: base.hostname });
 
+      let context: BrowserContext | null = null;
+
       try {
+        const browser = await getBrowser();
+        context = await browser.newContext({
+          userAgent: UA,
+          ignoreHTTPSErrors: true,
+          viewport: { width: 1280, height: 800 },
+          locale: "es-ES",
+          timezoneId: "Europe/Madrid",
+        });
+
         while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
           const batch: string[] = [];
           while (batch.length < CONCURRENCY && queue.length > 0 && visited.size + batch.length < HARD_CAP) {
@@ -529,13 +555,12 @@ export async function POST(req: NextRequest) {
           if (batch.length === 0) break;
           batch.forEach((u) => visited.add(u));
 
-          const results = await Promise.all(batch.map((u) => fetchOne(u, base.hostname).then((r) => ({ url: u, r }))));
-          for (const { url, r } of results) {
+          const results = await Promise.all(batch.map((u) => fetchOne(u, base.hostname, context!).then((r) => ({ url: u, r }))));
+          for (const { r } of results) {
             if (!r) continue;
-            parseSetCookies(r.headers, base.hostname, url, cookies);
             if (r.html) {
               detectTrackers(r.html, trackers);
-              if (!hasBanner && detectBanner(r.html)) hasBanner = true;
+              if (!hasBanner && (r.bannerVisible || detectBanner(r.html))) hasBanner = true;
               if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
               if (visited.size < HARD_CAP) {
                 for (const link of extractLinks(r.html, base)) {
@@ -557,7 +582,24 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        // Volcar cookies reales del contexto del navegador
+        const realCookies = await context.cookies();
+        for (const c of realCookies) {
+          const key = `${c.name}|${c.domain}`;
+          if (cookies.has(key)) continue;
+          cookies.set(key, {
+            name: c.name,
+            domain: c.domain.replace(/^\./, ""),
+            expires: playwrightCookieExpiry(c.expires),
+            secure: c.secure,
+            http_only: c.httpOnly,
+            found_on: [],
+            source: "http",
+          });
+        }
+
         resolveFamilies(trackers);
+        if (!hasBanner && hasConsentManagerFamily(trackers)) hasBanner = true;
         mergeInferredCookies([...trackers.keys()], cookies, base.hostname);
         const dict = await loadDictionary();
         for (const c of cookies.values()) {
@@ -596,6 +638,9 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         send({ type: "error", message: (e as Error).message });
       } finally {
+        if (context) {
+          try { await context.close(); } catch {}
+        }
         controller.close();
       }
     },
