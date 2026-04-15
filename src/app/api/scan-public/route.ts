@@ -293,14 +293,14 @@ function mergeInferredCookies(trackerNames: string[], cookies: Map<string, Detec
   }
 }
 
-const MAX_TOTAL_MS = 90_000;
-const PER_REQ_MS = 8_000;
-const HEADLESS_BUDGET = 8;
-const HEADLESS_CONCURRENCY = 4;
+const MAX_TOTAL_MS = 60_000;
+const PER_REQ_MS = 7_000;
+const HEADLESS_BUDGET = 3;
+const HEADLESS_CONCURRENCY = 3;
 const FAST_CONCURRENCY = 24;
-const FAST_TIMEOUT_MS = 4_000;
+const FAST_TIMEOUT_MS = 3_500;
 const HARD_CAP = 100;
-const MAX_BODY_BYTES = 600_000;
+const MAX_BODY_BYTES = 500_000;
 const MAX_REDIRECTS = 3;
 
 const CRITICAL_PATTERNS = /\/(politica|privacy|privacidad|cookie|aviso|legal|terminos|terms|checkout|carrito|cart|contacto|contact|login|register|registro|cuenta|account)/i;
@@ -458,7 +458,7 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     if (!response || response.status() >= 400) return null;
 
     // Esperar a que el banner JS tenga tiempo de inyectarse
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(400);
 
     const html = await page.content();
 
