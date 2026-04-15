@@ -18,5 +18,5 @@ npx --yes playwright install chromium >/dev/null 2>&1 || true
 npm run build
 pm2 describe cookieboy-web >/dev/null 2>&1 \
   && pm2 reload cookieboy-web --update-env \
-  || pm2 start "npm run start" --name cookieboy-web --cwd /var/www/cookieboy-web -i 2
+  || pm2 start "npm run start" --name cookieboy-web --cwd /var/www/cookieboy-web
 echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy OK"
