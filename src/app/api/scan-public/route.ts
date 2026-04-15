@@ -6,6 +6,9 @@ import { getBrowser } from "@/lib/scanner-browser";
 export const maxDuration = 300;
 export const runtime = "nodejs";
 
+// Precalentar el browser al cargar el módulo (elimina cold-start en el primer escaneo)
+void getBrowser().catch((e: unknown) => console.error("[scan-public] browser preheat failed", e));
+
 type DictEntry = {
   cat: "necessary" | "analytics" | "marketing" | "preferences";
   provider: string;
@@ -446,13 +449,6 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     page = await context.newPage();
     page.setDefaultNavigationTimeout(PER_REQ_MS);
     page.setDefaultTimeout(PER_REQ_MS);
-
-    // Bloquear recursos pesados para acelerar
-    await page.route("**/*", (route) => {
-      const type = route.request().resourceType();
-      if (type === "image" || type === "media" || type === "font") return route.abort();
-      return route.continue();
-    });
 
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: PER_REQ_MS });
     if (!response || response.status() >= 400) return null;
