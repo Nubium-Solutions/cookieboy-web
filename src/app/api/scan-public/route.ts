@@ -453,6 +453,12 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: PER_REQ_MS });
     if (!response || response.status() >= 400) return null;
 
+    // Protección SSRF: si la navegación siguió redirects y acabó en IP privada, abortar
+    try {
+      const finalUrl = new URL(page.url());
+      if (isPrivateHost(finalUrl.hostname) || finalUrl.hostname !== baseHost) return null;
+    } catch { return null; }
+
     // Esperar a que el banner JS tenga tiempo de inyectarse
     await page.waitForTimeout(400);
 
