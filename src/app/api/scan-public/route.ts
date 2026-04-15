@@ -681,7 +681,12 @@ export async function POST(req: NextRequest) {
         }
 
         // Volcar cookies reales del contexto (solo ahora, que ya hemos navegado lo importante)
-        const realCookies = await context.cookies();
+        let realCookies: Awaited<ReturnType<BrowserContext["cookies"]>> = [];
+        try {
+          realCookies = await context.cookies();
+        } catch (e) {
+          console.warn("[scan-public] context.cookies() fallo:", (e as Error).message);
+        }
         for (const c of realCookies) {
           const key = `${c.name}|${c.domain}`;
           if (cookies.has(key)) continue;
