@@ -293,10 +293,37 @@ function mergeInferredCookies(trackerNames: string[], cookies: Map<string, Detec
   }
 }
 
-const MAX_TOTAL_MS = 180_000;
-const PER_REQ_MS = 15_000;
-const CONCURRENCY = 5;
+const MAX_TOTAL_MS = 120_000;
+const PER_REQ_MS = 12_000;
+const HEADLESS_BUDGET = 15;
+const HEADLESS_CONCURRENCY = 5;
+const FAST_CONCURRENCY = 20;
+const FAST_TIMEOUT_MS = 5_000;
 const HARD_CAP = 100;
+const MAX_BODY_BYTES = 800_000;
+const MAX_REDIRECTS = 3;
+
+const CRITICAL_PATTERNS = /\/(politica|privacy|privacidad|cookie|aviso|legal|terminos|terms|checkout|carrito|cart|contacto|contact|login|register|registro|cuenta|account)/i;
+
+function urlPriority(url: string): number {
+  if (CRITICAL_PATTERNS.test(url)) return 100;
+  try {
+    const u = new URL(url);
+    const segs = u.pathname.split("/").filter(Boolean);
+    if (segs.length === 0) return 90;
+    if (segs.length === 1) return 50;
+    return Math.max(0, 30 - segs.length * 5);
+  } catch { return 0; }
+}
+
+function templateKey(url: string): string {
+  try {
+    const u = new URL(url);
+    const segs = u.pathname.split("/").filter(Boolean);
+    if (segs.length <= 1) return u.pathname;
+    return "/" + segs[0] + "/*";
+  } catch { return url; }
+}
 const SKIP_EXT = /\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|mp4|mp3|avi|mov|wav|woff2?|ttf|eot|json|xml|rss)(\?|$)/i;
 
 function isPrivateHost(host: string): boolean {
@@ -431,7 +458,7 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     if (!response || response.status() >= 400) return null;
 
     // Esperar a que el banner JS tenga tiempo de inyectarse
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(800);
 
     const html = await page.content();
 
@@ -460,6 +487,56 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     return null;
   } finally {
     if (page) await page.close().catch(() => {});
+  }
+}
+
+async function fetchOneFast(url: string, baseHost: string): Promise<{ html: string } | null> {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), FAST_TIMEOUT_MS);
+  try {
+    let current = url;
+    let res: Response | null = null;
+    for (let i = 0; i <= MAX_REDIRECTS; i++) {
+      try {
+        const u = new URL(current);
+        if (isPrivateHost(u.hostname)) return null;
+        if (u.hostname !== baseHost) return null;
+      } catch { return null; }
+      res = await fetch(current, {
+        headers: { "User-Agent": UA },
+        redirect: "manual",
+        signal: ctrl.signal,
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) return null;
+        current = new URL(loc, current).toString();
+        continue;
+      }
+      break;
+    }
+    if (!res || !res.ok) return null;
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.includes("text/html")) return { html: "" };
+    const reader = res.body?.getReader();
+    if (!reader) return { html: "" };
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_BODY_BYTES) { try { await reader.cancel(); } catch {} break; }
+      chunks.push(value);
+    }
+    const merged = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) { merged.set(c, offset); offset += c.byteLength; }
+    return { html: new TextDecoder().decode(merged) };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(to);
   }
 }
 
@@ -535,6 +612,24 @@ export async function POST(req: NextRequest) {
 
       let context: BrowserContext | null = null;
 
+      const selectNextHeadless = (): string | null => {
+        if (queue.length === 0) return null;
+        // Prioriza por score de URL y por diversidad de template (1 por template)
+        const seenTemplates = new Set<string>();
+        for (const v of visited) seenTemplates.add(templateKey(v));
+        let bestIdx = -1;
+        let bestScore = -Infinity;
+        for (let i = 0; i < queue.length; i++) {
+          const u = queue[i];
+          const tpl = templateKey(u);
+          const templateBonus = seenTemplates.has(tpl) ? 0 : 20;
+          const score = urlPriority(u) + templateBonus;
+          if (score > bestScore) { bestScore = score; bestIdx = i; }
+        }
+        if (bestIdx < 0) return null;
+        return queue.splice(bestIdx, 1)[0];
+      };
+
       try {
         const browser = await getBrowser();
         context = await browser.newContext({
@@ -545,15 +640,19 @@ export async function POST(req: NextRequest) {
           timezoneId: "Europe/Madrid",
         });
 
-        while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
+        // FASE 1: headless con sampling inteligente (hasta HEADLESS_BUDGET URLs)
+        let headlessDone = 0;
+        while (queue.length > 0 && headlessDone < HEADLESS_BUDGET && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
           const batch: string[] = [];
-          while (batch.length < CONCURRENCY && queue.length > 0 && visited.size + batch.length < HARD_CAP) {
-            const next = queue.shift()!;
+          while (batch.length < HEADLESS_CONCURRENCY && headlessDone + batch.length < HEADLESS_BUDGET) {
+            const next = selectNextHeadless();
+            if (!next) break;
             if (visited.has(next)) continue;
             batch.push(next);
           }
           if (batch.length === 0) break;
           batch.forEach((u) => visited.add(u));
+          headlessDone += batch.length;
 
           const results = await Promise.all(batch.map((u) => fetchOne(u, base.hostname, context!).then((r) => ({ url: u, r }))));
           for (const { r } of results) {
@@ -582,7 +681,7 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        // Volcar cookies reales del contexto del navegador
+        // Volcar cookies reales del contexto (solo ahora, que ya hemos navegado lo importante)
         const realCookies = await context.cookies();
         for (const c of realCookies) {
           const key = `${c.name}|${c.domain}`;
@@ -595,6 +694,46 @@ export async function POST(req: NextRequest) {
             http_only: c.httpOnly,
             found_on: [],
             source: "http",
+          });
+        }
+
+        // Cerrar contexto ya: no lo necesitamos más
+        try { await context.close(); } catch {}
+        context = null;
+
+        // FASE 2: fetch rápido para el resto hasta HARD_CAP (solo para contar páginas y descubrir trackers extra)
+        while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
+          const batch: string[] = [];
+          while (batch.length < FAST_CONCURRENCY && queue.length > 0 && visited.size + batch.length < HARD_CAP) {
+            const next = queue.shift()!;
+            if (visited.has(next)) continue;
+            batch.push(next);
+          }
+          if (batch.length === 0) break;
+          batch.forEach((u) => visited.add(u));
+
+          const results = await Promise.all(batch.map((u) => fetchOneFast(u, base.hostname).then((r) => ({ url: u, r }))));
+          for (const { r } of results) {
+            if (!r || !r.html) continue;
+            detectTrackers(r.html, trackers);
+            if (!hasBanner && detectBanner(r.html)) hasBanner = true;
+            if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
+            if (visited.size < HARD_CAP) {
+              for (const link of extractLinks(r.html, base)) {
+                if (!visited.has(link) && !queued.has(link)) {
+                  queue.push(link);
+                  queued.add(link);
+                }
+              }
+            }
+          }
+
+          send({
+            type: "progress",
+            visited: visited.size,
+            queue: queue.length,
+            cookies: cookies.size,
+            trackers: [...trackers.values()].filter((t) => t.kind === "tracker").length,
           });
         }
 
