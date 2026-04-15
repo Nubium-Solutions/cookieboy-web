@@ -761,6 +761,8 @@ export async function POST(req: NextRequest) {
         const elapsed = Date.now() - start;
         const timedOut = elapsed >= MAX_TOTAL_MS && queue.length > 0;
 
+        console.log(`[scan-public] ${base.hostname} | ${visited.size} URLs | ${cookiesArr.length} cookies | ${trackersArr.length} trackers | ${elapsed}ms`);
+
         send({
           type: "done",
           url: base.toString(),
@@ -768,6 +770,7 @@ export async function POST(req: NextRequest) {
           urls_scanned: visited.size,
           queue_remaining: queue.length,
           timed_out: timedOut,
+          elapsed_ms: elapsed,
           cookies: cookiesArr,
           trackers: trackersArr,
           plugins: pluginsArr,
