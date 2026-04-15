@@ -148,10 +148,6 @@ export default function PrivacidadPage() {
               <strong>Comytel / cPanel</strong> (España) — servidor de correo
               transaccional.
             </li>
-            <li>
-              <strong>Vercel Inc.</strong> (UE, Frankfurt) — alojamiento de la
-              web pública.
-            </li>
           </ul>
         </section>
 
