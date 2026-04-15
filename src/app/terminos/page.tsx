@@ -34,10 +34,11 @@ export default function TerminosPage() {
               <strong>Razón social:</strong> LUKE I AM YOUR FATHER SL
             </li>
             <li>
-              <strong>NIF:</strong> [NIF pendiente]
+              <strong>NIF:</strong> B16425282
             </li>
             <li>
-              <strong>Domicilio social:</strong> [Dirección pendiente]
+              <strong>Domicilio social:</strong> Calle Arabial, 45 — Centro
+              Comercial Neptuno, local 32
             </li>
             <li>
               <strong>Email:</strong>{" "}
