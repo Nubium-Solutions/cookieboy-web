@@ -13,8 +13,8 @@ const columns = [
   {
     title: "Empresa",
     links: [
-      { label: "Sobre nosotros", href: "/sobre" },
-      { label: "Contacto", href: "/contacto" },
+      { label: "Sobre nosotros", href: "/nosotros" },
+      { label: "Contacto", href: "/soporte" },
       { label: "Privacidad", href: "/privacidad" },
       { label: "Términos", href: "/terminos" },
     ],
