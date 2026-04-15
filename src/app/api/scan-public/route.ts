@@ -293,14 +293,14 @@ function mergeInferredCookies(trackerNames: string[], cookies: Map<string, Detec
   }
 }
 
-const MAX_TOTAL_MS = 120_000;
-const PER_REQ_MS = 12_000;
-const HEADLESS_BUDGET = 15;
-const HEADLESS_CONCURRENCY = 5;
-const FAST_CONCURRENCY = 20;
-const FAST_TIMEOUT_MS = 5_000;
+const MAX_TOTAL_MS = 90_000;
+const PER_REQ_MS = 8_000;
+const HEADLESS_BUDGET = 8;
+const HEADLESS_CONCURRENCY = 4;
+const FAST_CONCURRENCY = 24;
+const FAST_TIMEOUT_MS = 4_000;
 const HARD_CAP = 100;
-const MAX_BODY_BYTES = 800_000;
+const MAX_BODY_BYTES = 600_000;
 const MAX_REDIRECTS = 3;
 
 const CRITICAL_PATTERNS = /\/(politica|privacy|privacidad|cookie|aviso|legal|terminos|terms|checkout|carrito|cart|contacto|contact|login|register|registro|cuenta|account)/i;
@@ -458,7 +458,7 @@ async function fetchOne(url: string, baseHost: string, context: BrowserContext):
     if (!response || response.status() >= 400) return null;
 
     // Esperar a que el banner JS tenga tiempo de inyectarse
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(500);
 
     const html = await page.content();
 
@@ -630,6 +630,9 @@ export async function POST(req: NextRequest) {
         return queue.splice(bestIdx, 1)[0];
       };
 
+      const phase1Start = Date.now();
+      let phase1Elapsed = 0;
+
       try {
         const browser = await getBrowser();
         context = await browser.newContext({
@@ -697,9 +700,13 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        phase1Elapsed = Date.now() - phase1Start;
+
         // Cerrar contexto ya: no lo necesitamos más
         try { await context.close(); } catch {}
         context = null;
+
+        const phase2Start = Date.now();
 
         // FASE 2: fetch rápido para el resto hasta HARD_CAP (solo para contar páginas y descubrir trackers extra)
         while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
@@ -761,7 +768,8 @@ export async function POST(req: NextRequest) {
         const elapsed = Date.now() - start;
         const timedOut = elapsed >= MAX_TOTAL_MS && queue.length > 0;
 
-        console.log(`[scan-public] ${base.hostname} | ${visited.size} URLs | ${cookiesArr.length} cookies | ${trackersArr.length} trackers | ${elapsed}ms`);
+        const phase2Elapsed = Date.now() - phase2Start;
+        console.log(`[scan-public] ${base.hostname} | ${visited.size} URLs | ${cookiesArr.length} cookies | ${trackersArr.length} trackers | total=${elapsed}ms phase1=${phase1Elapsed}ms phase2=${phase2Elapsed}ms`);
 
         send({
           type: "done",
