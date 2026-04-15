@@ -574,6 +574,10 @@ export async function POST(req: NextRequest) {
   }
   let input = (body.url ?? "").trim();
   if (!input) return new Response(JSON.stringify({ error: "missing_url" }), { status: 400 });
+  // Rechazar schemes que no sean http/https antes de normalizar
+  if (/^[a-z][a-z0-9+.-]*:/i.test(input) && !/^https?:\/\//i.test(input)) {
+    return new Response(JSON.stringify({ error: "invalid_protocol" }), { status: 400 });
+  }
   if (!/^https?:\/\//i.test(input)) input = "https://" + input;
 
   let base: URL;
