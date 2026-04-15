@@ -703,9 +703,10 @@ export async function POST(req: NextRequest) {
         context = null;
 
         const phase2Start = Date.now();
+        const phase2Budget = 8_000; // máx 8s en fase 2 para cortar sitios lentos
 
         // FASE 2: fetch rápido para el resto hasta HARD_CAP (solo para contar páginas y descubrir trackers extra)
-        while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS) {
+        while (queue.length > 0 && visited.size < HARD_CAP && Date.now() - start < MAX_TOTAL_MS && Date.now() - phase2Start < phase2Budget) {
           const batch: string[] = [];
           while (batch.length < FAST_CONCURRENCY && queue.length > 0 && visited.size + batch.length < HARD_CAP) {
             const next = queue.shift()!;
