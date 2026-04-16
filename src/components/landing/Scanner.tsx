@@ -28,6 +28,7 @@ type ScanResult = {
     http_only: boolean;
     source: "http" | "inferred";
     inferred_from?: string;
+    category?: string;
     provider?: string;
     purpose?: string;
   }[];
@@ -39,12 +40,41 @@ type ScanResult = {
 
 type Progress = { visited: number; queue: number; cookies: number; trackers: number };
 
-const categoryStyles: Record<string, string> = {
-  analytics: "bg-blue-100 text-blue-700",
-  marketing: "bg-rose-100 text-rose-700",
-  preferences: "bg-purple-100 text-purple-700",
-  necessary: "bg-emerald-100 text-emerald-700",
+const CAT_DOT: Record<string, string> = {
+  analytics: "bg-blue-500",
+  marketing: "bg-rose-500",
+  preferences: "bg-violet-500",
+  necessary: "bg-emerald-500",
 };
+const CAT_LABEL: Record<string, string> = {
+  analytics: "Analítica",
+  marketing: "Marketing",
+  preferences: "Preferencias",
+  necessary: "Necesaria",
+};
+
+function ScoreRing({ score }: { score: number }) {
+  const r = 54, c = 2 * Math.PI * r;
+  const offset = c - (score / 100) * c;
+  const color = score >= 80 ? "#10b981" : score >= 50 ? "#f59e0b" : "#ef4444";
+  return (
+    <div className="relative w-36 h-36 shrink-0">
+      <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="#f1f5f9" strokeWidth="7" />
+        <circle
+          cx="60" cy="60" r={r} fill="none"
+          stroke={color} strokeWidth="7" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-semibold tracking-tight text-slate-900 tabular-nums">{score}</span>
+        <span className="text-[10px] text-slate-400 tracking-wider uppercase mt-0.5">de 100</span>
+      </div>
+    </div>
+  );
+}
 
 export function Scanner({ compact = false }: { compact?: boolean }) {
   const [url, setUrl] = useState("");
@@ -52,6 +82,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
+  const [showAllCookies, setShowAllCookies] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +90,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
     setError(null);
     setResult(null);
     setProgress(null);
+    setShowAllCookies(false);
     try {
       const res = await fetch("/api/scan-public", {
         method: "POST",
@@ -81,24 +113,12 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
         buffer = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.trim()) continue;
-          let evt: { type: string; [k: string]: unknown };
           try {
-            evt = JSON.parse(line);
-          } catch {
-            continue;
-          }
-          if (evt.type === "progress") {
-            setProgress({
-              visited: evt.visited as number,
-              queue: evt.queue as number,
-              cookies: evt.cookies as number,
-              trackers: evt.trackers as number,
-            });
-          } else if (evt.type === "done") {
-            setResult(evt as unknown as ScanResult);
-          } else if (evt.type === "error") {
-            setError((evt.message as string) ?? "Error desconocido.");
-          }
+            const evt = JSON.parse(line);
+            if (evt.type === "progress") setProgress(evt);
+            else if (evt.type === "done") setResult(evt);
+            else if (evt.type === "error") setError(evt.message ?? "Error desconocido.");
+          } catch { /* skip */ }
         }
       }
     } catch {
@@ -108,30 +128,28 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
     }
   }
 
-  const scoreColor =
-    result && result.score >= 80
-      ? "text-emerald-600"
-      : result && result.score >= 50
-      ? "text-amber-600"
-      : "text-red-600";
+  const httpCookies = result?.cookies.filter(c => c.source === "http") ?? [];
+  const inferredCookies = result?.cookies.filter(c => c.source === "inferred") ?? [];
 
   return (
-    <section id="escaner" className={`max-w-4xl mx-auto px-4 sm:px-6 ${compact ? "pt-16 md:pt-20 pb-24 md:pb-32" : "pt-20 md:pt-32 pb-28 md:pb-40"}`}>
+    <section id="escaner" className={`max-w-5xl mx-auto px-4 sm:px-6 ${compact ? "pt-16 md:pt-20 pb-24 md:pb-32" : "pt-20 md:pt-32 pb-28 md:pb-40"}`}>
+      {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-xs font-semibold uppercase tracking-wider mb-6">
           <Icon icon="solar:magnifer-linear" width={14} height={14} />
-          Escáner gratuito
+          Auditoría GDPR gratuita
         </div>
         <h2 className="text-3xl sm:text-4xl md:text-6xl font-medium text-slate-900 tracking-tighter mb-6 leading-[1.1]">
           ¿Tu web cumple con GDPR?
         </h2>
         <p className="text-base md:text-lg text-slate-500 font-light max-w-2xl mx-auto">
-          Introduce tu URL y analizamos las cookies, trackers y banners de tu sitio en segundos. Gratis y sin registro.
+          Analizamos cookies, trackers y consentimiento de tu sitio. Sin registro.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass-panel p-3 rounded-full border border-white/60 flex items-center gap-2 max-w-2xl mx-auto mb-4">
-        <Icon icon="solar:global-linear" className="text-slate-400 ml-4" width={20} height={20} />
+      {/* Search */}
+      <form onSubmit={handleSubmit} className="glass-panel p-3 rounded-full border border-white/60 flex items-center gap-2 max-w-2xl mx-auto mb-16">
+        <Icon icon="solar:global-linear" className="text-slate-400 ml-4 shrink-0" width={20} height={20} />
         <input
           type="text"
           value={url}
@@ -149,213 +167,237 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
           {loading ? "Analizando..." : "Analizar"}
         </button>
       </form>
-      <p className="text-center text-xs text-slate-500 font-light mb-12">
-        Rastreamos todas las páginas internas de tu sitio para mostrarte el plan que mejor encaja.
-      </p>
 
+      {/* Error */}
       {error && (
-        <div className="glass-panel p-6 rounded-2xl border border-red-200 bg-red-50/60 text-red-700 text-sm text-center">
+        <div className="max-w-2xl mx-auto p-5 rounded-2xl bg-red-50 border border-red-200/80 text-red-700 text-sm text-center mb-8">
           {error}
         </div>
       )}
 
+      {/* Loading */}
       {loading && (
-        <div className="glass-panel p-12 rounded-[3rem] border border-white/60 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-[100px]" />
-          <div className="relative z-10">
-            <div className="inline-block w-12 h-12 border-4 border-amber-300 border-t-transparent rounded-full animate-spin mb-6" />
-            <p className="text-slate-500 font-light mb-1">Rastreando {url}...</p>
-            <p className="text-slate-500 text-xs font-light mb-8">
-              El tamaño de la web determinará la duración del análisis
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-              <div>
-                <div className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
-                  {progress?.visited ?? 0}
-                </div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Rastreadas</div>
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-block w-10 h-10 border-[3px] border-amber-300 border-t-transparent rounded-full animate-spin mb-6" />
+          <p className="text-slate-500 font-light mb-1">Rastreando <span className="text-slate-900 font-medium">{url}</span></p>
+          <p className="text-slate-400 text-xs mb-10">El análisis depende del tamaño del sitio</p>
+          <div className="grid grid-cols-4 gap-px bg-slate-200/60 rounded-2xl overflow-hidden max-w-lg mx-auto">
+            {[
+              { v: progress?.visited ?? 0, l: "Páginas" },
+              { v: progress?.queue ?? 0, l: "En cola" },
+              { v: progress?.cookies ?? 0, l: "Cookies" },
+              { v: progress?.trackers ?? 0, l: "Trackers" },
+            ].map(d => (
+              <div key={d.l} className="bg-white py-5 px-3">
+                <div className="text-2xl font-semibold text-slate-900 tabular-nums">{d.v}</div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">{d.l}</div>
               </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tighter tabular-nums">
-                  {progress?.queue ?? 0}
-                </div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">En cola</div>
-              </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
-                  {progress?.cookies ?? 0}
-                </div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Cookies</div>
-              </div>
-              <div>
-                <div className="text-3xl md:text-4xl font-medium text-amber-600 tracking-tighter tabular-nums">
-                  {progress?.trackers ?? 0}
-                </div>
-                <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-wider mt-1">Trackers</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
+      {/* Results */}
       {result && (
-        <div className="space-y-6">
-          <div className="glass-panel p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border border-white/60 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-[100px]" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
-              <div className="text-center md:text-left flex-1">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">CookieBoy Score</div>
-                <div className={`text-6xl md:text-7xl font-medium tracking-tighter ${scoreColor}`}>{result.score}</div>
-                <div className="text-sm text-slate-500 font-light mt-2">sobre 100</div>
+        <div className="space-y-8">
+          {/* Summary row */}
+          <div className="flex flex-col md:flex-row gap-6 items-stretch">
+            {/* Score */}
+            <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 p-8 flex items-center gap-8">
+              <ScoreRing score={result.score} />
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">{result.host}</h3>
+                <p className="text-sm text-slate-500 mb-3">{result.urls_scanned} páginas analizadas{result.timed_out ? "+" : ""}</p>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-slate-600"><strong className="text-slate-900">{result.cookies.length}</strong> cookies</span>
+                  <span className="text-slate-600"><strong className="text-slate-900">{result.trackers.length}</strong> trackers</span>
+                </div>
               </div>
-              <div className="flex-1 space-y-3 w-full">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">URL analizada</span>
-                  <span className="font-mono text-slate-900 truncate max-w-[60%]">{result.host}</span>
+            </div>
+            {/* GDPR summary pills */}
+            <div className="flex flex-row md:flex-col gap-3 md:w-56">
+              <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 p-5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Icon icon="solar:check-circle-linear" width={20} />
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Páginas rastreadas</span>
-                  <span className="font-medium text-slate-900">
-                    {result.urls_scanned}
-                    {result.timed_out && <span className="text-amber-600 ml-1">+</span>}
-                  </span>
+                <div>
+                  <div className="text-2xl font-semibold text-slate-900 tabular-nums leading-none">{result.gdpr_summary.passed}</div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">Correctos</div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Cookies detectadas</span>
-                  <span className="font-medium text-slate-900">{result.cookies.length}</span>
+              </div>
+              <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 p-5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-500 shrink-0">
+                  <Icon icon="solar:close-circle-linear" width={20} />
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Trackers detectados</span>
-                  <span className="font-medium text-slate-900">{result.trackers.length}</span>
+                <div>
+                  <div className="text-2xl font-semibold text-slate-900 tabular-nums leading-none">{result.gdpr_summary.failed}</div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">Fallos</div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Checks GDPR</span>
-                  <span className="font-medium text-slate-900">
-                    {result.gdpr_summary.passed} ok · {result.gdpr_summary.failed} fallos · {result.gdpr_summary.warnings} avisos
-                  </span>
+              </div>
+              <div className="flex-1 bg-white rounded-2xl border border-slate-200/80 p-5 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
+                  <Icon icon="solar:danger-triangle-linear" width={20} />
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-slate-900 tabular-nums leading-none">{result.gdpr_summary.warnings}</div>
+                  <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">Avisos</div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* GDPR Checks */}
           {result.gdpr_checks.length > 0 && (
-            <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-6">Cumplimiento GDPR</h3>
-              <div className="space-y-3">
-                {result.gdpr_checks.map((check) => (
-                  <div key={check.id} className={`p-4 rounded-xl border ${
-                    check.status === "pass" ? "bg-emerald-50/60 border-emerald-200/60" :
-                    check.status === "fail" ? "bg-red-50/60 border-red-200/60" :
-                    "bg-amber-50/60 border-amber-200/60"
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg mt-0.5">
-                        {check.status === "pass" ? "✅" : check.status === "fail" ? "❌" : "⚠️"}
-                      </span>
+            <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
+              <div className="px-8 py-6 border-b border-slate-100">
+                <h3 className="text-base font-semibold text-slate-900">Informe de cumplimiento</h3>
+                <p className="text-xs text-slate-400 mt-1">Verificación basada en RGPD, ePrivacy, AEPD y CNIL</p>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {result.gdpr_checks.map((check) => {
+                  const icon = check.status === "pass"
+                    ? { name: "solar:check-circle-bold", cls: "text-emerald-500" }
+                    : check.status === "fail"
+                    ? { name: "solar:close-circle-bold", cls: "text-red-500" }
+                    : { name: "solar:danger-triangle-bold", cls: "text-amber-500" };
+                  return (
+                    <div key={check.id} className="px-8 py-5 flex items-start gap-4">
+                      <Icon icon={icon.name} width={20} className={`${icon.cls} mt-0.5 shrink-0`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-slate-900">{check.name}</span>
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                            check.severity === "critical" ? "bg-red-100 text-red-700" :
-                            check.severity === "high" ? "bg-amber-100 text-amber-700" :
-                            "bg-slate-100 text-slate-600"
-                          }`}>{check.severity === "critical" ? "Crítico" : check.severity === "high" ? "Alto" : "Medio"}</span>
+                          <span className="text-sm font-medium text-slate-900">{check.name}</span>
+                          {check.severity === "critical" && (
+                            <span className="text-[9px] font-semibold px-1.5 py-px rounded bg-red-100 text-red-600 uppercase tracking-wider">Crítico</span>
+                          )}
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">{check.detail}</p>
-                        <p className="text-[11px] text-slate-400 mt-1 font-light">{check.reference}</p>
+                        <p className="text-[13px] text-slate-500 mt-0.5 leading-relaxed">{check.detail}</p>
+                        <p className="text-[11px] text-slate-300 mt-1">{check.reference}</p>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {result.trackers.length > 0 && (
-            <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-6">Servicios de tracking detectados</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {result.trackers.map((t) => (
-                  <div key={t.name} className="flex items-center justify-between p-4 rounded-xl bg-white/60 border border-white/80">
-                    <div>
-                      <div className="font-medium text-slate-900">{t.name}</div>
-                      <div className="text-xs text-slate-500 font-light">{t.provider}</div>
+          {/* Trackers + cookies side by side on desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Trackers */}
+            {result.trackers.length > 0 && (
+              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100">
+                  <h3 className="text-sm font-semibold text-slate-900">Trackers</h3>
+                </div>
+                <div className="divide-y divide-slate-50">
+                  {result.trackers.map((t) => (
+                    <div key={t.name} className="px-6 py-3.5 flex items-center justify-between">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-slate-900 truncate">{t.name}</div>
+                        <div className="text-[11px] text-slate-400">{t.provider}</div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`w-1.5 h-1.5 rounded-full ${CAT_DOT[t.category] ?? "bg-slate-400"}`} />
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">{CAT_LABEL[t.category] ?? t.category}</span>
+                      </div>
                     </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full uppercase tracking-wider ${categoryStyles[t.category] ?? "bg-slate-100 text-slate-600"}`}>
-                      {t.category}
-                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cookies */}
+            {result.cookies.length > 0 && (
+              <div className={`${result.trackers.length > 0 ? "lg:col-span-3" : "lg:col-span-5"} bg-white rounded-2xl border border-slate-200/80 overflow-hidden`}>
+                <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      Cookies <span className="font-normal text-slate-400">({result.cookies.length})</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {httpCookies.length} detectadas · {inferredCookies.length} inferidas de scripts
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {result.cookies.length > 0 && (
-            <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-2">Cookies detectadas ({result.cookies.length})</h3>
-              <p className="text-xs text-slate-500 font-light mb-6 max-w-2xl">
-                Las cookies marcadas como <span className="text-amber-700 font-medium">INFERIDA</span> se deducen de los plugins y servicios detectados en el HTML, no de cabeceras HTTP reales. Verifica tu instalación antes de publicarlas en tu política de cookies.
-              </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                      <th className="py-3 pr-4">Nombre</th>
-                      <th className="py-3 pr-4">Dominio</th>
-                      <th className="py-3 pr-4">Expira</th>
-                      <th className="py-3">Flags</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.cookies.map((c, i) => (
-                      <tr key={`${c.name}-${i}`} className="border-b border-slate-100 last:border-0 align-top">
-                        <td className="py-3 pr-4">
-                          <div className="font-mono text-slate-900">{c.name}</div>
-                          {c.source === "inferred" && (
-                            <div className="text-[10px] text-amber-700 font-light mt-1">
-                              Inferida de {c.inferred_from}
-                            </div>
-                          )}
-                          {c.purpose && (
-                            <div className="text-[11px] text-slate-500 font-light mt-1 max-w-xs">{c.purpose}</div>
-                          )}
-                        </td>
-                        <td className="py-3 pr-4 text-slate-600">{c.domain}</td>
-                        <td className="py-3 pr-4 text-slate-500 text-xs">{c.expires ?? "Sesión"}</td>
-                        <td className="py-3 text-xs">
-                          {c.source === "inferred" ? (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium uppercase tracking-wider text-[10px]">
-                              Inferida
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium uppercase tracking-wider text-[10px]">
-                              Detectada
-                            </span>
-                          )}
-                        </td>
+                  {result.cookies.length > 8 && (
+                    <button
+                      onClick={() => setShowAllCookies(!showAllCookies)}
+                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    >
+                      {showAllCookies ? "Colapsar" : `Ver todas (${result.cookies.length})`}
+                    </button>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13px]">
+                    <thead>
+                      <tr className="text-left text-[10px] text-slate-400 uppercase tracking-wider">
+                        <th className="py-3 px-6 font-medium">Nombre</th>
+                        <th className="py-3 px-3 font-medium">Dominio</th>
+                        <th className="py-3 px-3 font-medium">Duración</th>
+                        <th className="py-3 px-6 font-medium">Tipo</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {(showAllCookies ? result.cookies : result.cookies.slice(0, 8)).map((c, i) => (
+                        <tr key={`${c.name}-${i}`} className="align-top group">
+                          <td className="py-3 px-6">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${CAT_DOT[c.category ?? ""] ?? "bg-slate-300"}`} />
+                              <span className="font-mono text-slate-900 text-xs">{c.name}</span>
+                            </div>
+                            {c.purpose && (
+                              <p className="text-[11px] text-slate-400 mt-1 ml-3.5 leading-snug max-w-xs">{c.purpose}</p>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-slate-500 text-xs max-w-[140px] truncate">{c.domain}</td>
+                          <td className="py-3 px-3 text-slate-400 text-xs whitespace-nowrap">{c.expires ?? "Sesión"}</td>
+                          <td className="py-3 px-6">
+                            {c.source === "inferred" ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600">
+                                <span className="w-1 h-1 rounded-full bg-amber-400" />
+                                Inferida
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
+                                <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                                HTTP
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {!showAllCookies && result.cookies.length > 8 && (
+                  <div className="px-6 py-3 border-t border-slate-100">
+                    <button
+                      onClick={() => setShowAllCookies(true)}
+                      className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                    >
+                      + {result.cookies.length - 8} cookies más
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          <div className="glass-panel p-10 rounded-[2rem] border border-amber-300/60 bg-gradient-to-br from-amber-50/60 to-white/60 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/20 rounded-full blur-[100px]" />
-            <div className="relative z-10">
-              <h3 className="text-2xl md:text-3xl font-medium text-slate-900 tracking-tight mb-3">
-                Cumple al 100% con CookieBoy
+          {/* CTA */}
+          <div className="text-center py-10 px-8 bg-slate-900 rounded-2xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(245,158,11,.12),transparent_70%)]" />
+            <div className="relative">
+              <h3 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-3">
+                Soluciona estos problemas en 5 minutos
               </h3>
-              <p className="text-slate-500 font-light mb-6 max-w-xl mx-auto">
-                Instala el plugin en WordPress y gestiona banner, política, consentimientos y Consent Mode v2 en minutos.
+              <p className="text-slate-400 text-sm mb-8 max-w-lg mx-auto">
+                CookieBoy instala el banner, bloquea cookies sin consentimiento, genera la política y activa Consent Mode v2 automáticamente.
               </p>
               <Link
                 href="/probar"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400 transition-colors"
               >
                 Probar gratis 14 días
-                <Icon icon="solar:arrow-right-linear" width={18} height={18} />
+                <Icon icon="solar:arrow-right-linear" width={18} />
               </Link>
             </div>
           </div>
