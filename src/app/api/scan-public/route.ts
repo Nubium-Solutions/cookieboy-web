@@ -901,7 +901,6 @@ export async function POST(req: NextRequest) {
           for (const { r } of results) {
             if (!r || !r.html) continue;
             detectTrackers(r.html, trackers);
-            allHtml += r.html;
             if (!hasBanner && detectBanner(r.html)) hasBanner = true;
             if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
             if (!hasConsentMode && detectConsentMode(r.html)) hasConsentMode = true;
