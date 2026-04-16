@@ -4,6 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
+type GdprCheck = {
+  id: string;
+  name: string;
+  description: string;
+  status: "pass" | "fail" | "warn";
+  detail: string;
+  severity: "critical" | "high" | "medium";
+  reference: string;
+};
+
 type ScanResult = {
   url: string;
   host: string;
@@ -22,7 +32,8 @@ type ScanResult = {
     purpose?: string;
   }[];
   trackers: { name: string; provider: string; category: string }[];
-  checks: { has_banner: boolean; has_policy: boolean };
+  gdpr_checks: GdprCheck[];
+  gdpr_summary: { passed: number; failed: number; warnings: number; total: number };
   score: number;
 };
 
@@ -218,20 +229,47 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
                   <span className="font-medium text-slate-900">{result.trackers.length}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Banner de cookies</span>
-                  <span className={result.checks.has_banner ? "text-emerald-600" : "text-red-600"}>
-                    {result.checks.has_banner ? "Detectado" : "No detectado"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Política de cookies</span>
-                  <span className={result.checks.has_policy ? "text-emerald-600" : "text-red-600"}>
-                    {result.checks.has_policy ? "Detectada" : "No detectada"}
+                  <span className="text-slate-600">Checks GDPR</span>
+                  <span className="font-medium text-slate-900">
+                    {result.gdpr_summary.passed} ok · {result.gdpr_summary.failed} fallos · {result.gdpr_summary.warnings} avisos
                   </span>
                 </div>
               </div>
             </div>
           </div>
+
+          {result.gdpr_checks.length > 0 && (
+            <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
+              <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-6">Cumplimiento GDPR</h3>
+              <div className="space-y-3">
+                {result.gdpr_checks.map((check) => (
+                  <div key={check.id} className={`p-4 rounded-xl border ${
+                    check.status === "pass" ? "bg-emerald-50/60 border-emerald-200/60" :
+                    check.status === "fail" ? "bg-red-50/60 border-red-200/60" :
+                    "bg-amber-50/60 border-amber-200/60"
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg mt-0.5">
+                        {check.status === "pass" ? "✅" : check.status === "fail" ? "❌" : "⚠️"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-slate-900">{check.name}</span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            check.severity === "critical" ? "bg-red-100 text-red-700" :
+                            check.severity === "high" ? "bg-amber-100 text-amber-700" :
+                            "bg-slate-100 text-slate-600"
+                          }`}>{check.severity === "critical" ? "Crítico" : check.severity === "high" ? "Alto" : "Medio"}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 mt-1">{check.detail}</p>
+                        <p className="text-[11px] text-slate-400 mt-1 font-light">{check.reference}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {result.trackers.length > 0 && (
             <div className="glass-panel p-8 rounded-[2rem] border border-white/60">
@@ -313,7 +351,7 @@ export function Scanner({ compact = false }: { compact?: boolean }) {
                 Instala el plugin en WordPress y gestiona banner, política, consentimientos y Consent Mode v2 en minutos.
               </p>
               <Link
-                href="#precios"
+                href="/probar"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors"
               >
                 Probar gratis 14 días
