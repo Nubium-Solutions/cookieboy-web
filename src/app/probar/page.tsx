@@ -56,25 +56,38 @@ export default function ProbarPage() {
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
             <div className="text-5xl mb-4">🎉</div>
             <h1 className="text-2xl font-semibold text-emerald-900 mb-3">
-              ¡Tu prueba gratuita está activa!
+              ¡Revisa tu email!
             </h1>
             <p className="text-emerald-800 mb-6">
-              Revisa tu email <strong>{email}</strong> — te hemos enviado tu
-              clave de licencia e instrucciones para instalar el plugin.
+              Hemos enviado a <strong>{email}</strong> tu clave de licencia
+              e instrucciones para instalar el plugin en WordPress.
             </p>
-            <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-4 font-mono text-lg tracking-widest text-emerald-900 mb-6">
-              {result.license_key}
+            <div className="rounded-xl bg-white/80 border border-emerald-200 p-5 text-left space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <span className="text-lg">1.</span>
+                <p className="text-sm text-emerald-800">Abre el email y copia tu clave de licencia.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-lg">2.</span>
+                <p className="text-sm text-emerald-800">Descarga el plugin desde tu panel de cliente o directamente desde el email.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-lg">3.</span>
+                <p className="text-sm text-emerald-800">Instálalo en WordPress y pega la clave en CookieBoy → Licencia.</p>
+              </div>
             </div>
-            <div className="space-y-3 text-sm text-emerald-700">
-              <p>
-                <strong>Siguiente paso:</strong> descarga e instala el plugin
-                en tu WordPress.
-              </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
                 href="https://licencias.nubiumsolutions.com/cliente"
-                className="inline-block mt-4 rounded-xl bg-amber-500 px-6 py-3 font-medium text-white hover:bg-amber-600"
+                className="rounded-xl bg-amber-500 px-6 py-3 font-medium text-white hover:bg-amber-600"
               >
-                Ir a mi panel de cliente →
+                Ir a mi panel →
+              </a>
+              <a
+                href="mailto:soporte@cookieboy.es"
+                className="rounded-xl border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
+              >
+                ¿No te ha llegado? Contactar soporte
               </a>
             </div>
           </div>
@@ -131,6 +144,12 @@ export default function ProbarPage() {
                 política de privacidad
               </Link>
               .
+            </p>
+            <p className="mt-3 text-center text-xs text-slate-400">
+              ¿Problemas?{" "}
+              <a href="mailto:soporte@cookieboy.es" className="underline hover:text-amber-600">
+                soporte@cookieboy.es
+              </a>
             </p>
           </div>
         )}
