@@ -22,10 +22,10 @@ export function Hero() {
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <a
-              href="#precios"
+              href="/probar"
               className="cta-btn w-full sm:w-auto px-10 py-4 text-sm font-medium text-slate-900 bg-white/70 border border-white/90 rounded-full backdrop-blur-md shadow-[0_15px_35px_rgba(0,0,0,0.04),inset_0_0_0_1px_rgba(255,255,255,0.5)] transition-all duration-400 hover:-translate-y-1 hover:bg-white/95 relative overflow-hidden inline-flex items-center justify-center"
             >
-              Probar gratis
+              Probar gratis 14 días
             </a>
             <a
               href="/#caracteristicas"

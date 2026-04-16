@@ -116,14 +116,20 @@ export function Pricing() {
               ))}
             </ul>
             <a
-              href={`${CHECKOUT_BASE}?plan=${plan.slug}&cycle=yearly`}
-              className={`w-full py-3 rounded-xl font-medium transition-colors relative z-10 text-center ${
+              href="/probar"
+              className={`w-full py-3 rounded-xl font-medium transition-colors relative z-10 text-center block ${
                 plan.highlighted
                   ? "bg-slate-900 text-white hover:bg-slate-800 shadow-lg"
                   : "border border-slate-300 text-slate-700 hover:bg-white/50"
               }`}
             >
-              {plan.cta}
+              Probar gratis 14 días
+            </a>
+            <a
+              href={`${CHECKOUT_BASE}?plan=${plan.slug}&cycle=yearly`}
+              className="block text-center text-xs text-slate-400 mt-2 hover:text-amber-600"
+            >
+              o comprar directamente
             </a>
           </div>
         ))}

@@ -377,13 +377,160 @@ function detectTrackers(html: string, found: Map<string, DetectedTracker>) {
   }
 }
 
-function computeScore(opts: { cookies: number; trackers: number; hasBanner: boolean; hasPolicy: boolean }) {
+type GdprCheck = {
+  id: string;
+  name: string;
+  description: string;
+  status: "pass" | "fail" | "warn";
+  detail: string;
+  severity: "critical" | "high" | "medium";
+  reference: string;
+};
+
+function runGdprChecks(opts: {
+  hasBanner: boolean;
+  bannerVisible: boolean;
+  hasPolicy: boolean;
+  hasConsentMode: boolean;
+  hasRejectButton: boolean;
+  hasSettingsButton: boolean;
+  cookiesBeforeConsent: number;
+  thirdPartyCookies: number;
+  trackersWithoutBanner: number;
+  insecureCookies: number;
+  longDurationCookies: number;
+  trackers: number;
+}): GdprCheck[] {
+  const checks: GdprCheck[] = [];
+
+  checks.push({
+    id: "banner_present",
+    name: "Banner de consentimiento",
+    description: "El sitio debe mostrar un banner de cookies antes de instalar cookies no esenciales.",
+    status: opts.hasBanner ? "pass" : "fail",
+    detail: opts.hasBanner
+      ? (opts.bannerVisible ? "Banner detectado y visible al cargar la página." : "Banner detectado en el código pero podría no ser visible inmediatamente.")
+      : "No se ha detectado ningún banner de consentimiento de cookies.",
+    severity: "critical",
+    reference: "RGPD Art. 7 · ePrivacy Art. 5(3) · AEPD Guía 2024",
+  });
+
+  checks.push({
+    id: "cookies_before_consent",
+    name: "Cookies sin consentimiento previo",
+    description: "No deben instalarse cookies no esenciales antes de obtener el consentimiento del usuario.",
+    status: opts.cookiesBeforeConsent === 0 ? "pass" : "fail",
+    detail: opts.cookiesBeforeConsent === 0
+      ? "No se detectaron cookies no esenciales en la carga inicial sin consentimiento."
+      : `Se detectaron ${opts.cookiesBeforeConsent} cookie(s) no esenciales instaladas sin consentimiento previo.`,
+    severity: "critical",
+    reference: "RGPD Art. 6 · ePrivacy Art. 5(3) · AEPD Guía 2024",
+  });
+
+  checks.push({
+    id: "cookie_policy",
+    name: "Política de cookies",
+    description: "El sitio debe tener una política de cookies accesible con información detallada sobre cada cookie.",
+    status: opts.hasPolicy ? "pass" : "fail",
+    detail: opts.hasPolicy
+      ? "Se detectó enlace a política de cookies."
+      : "No se encontró enlace a política de cookies en el sitio.",
+    severity: "critical",
+    reference: "RGPD Art. 13-14 · ePrivacy Art. 5(3)",
+  });
+
+  if (opts.trackers > 0) {
+    checks.push({
+      id: "consent_mode",
+      name: "Google Consent Mode v2",
+      description: "Si se usa Google Analytics/Ads, debe implementarse Consent Mode v2 para gestionar el consentimiento correctamente.",
+      status: opts.hasConsentMode ? "pass" : (opts.trackers > 0 ? "warn" : "pass"),
+      detail: opts.hasConsentMode
+        ? "Consent Mode v2 detectado correctamente."
+        : "No se detectó implementación de Google Consent Mode v2. Requerido si usas servicios de Google.",
+      severity: "high",
+      reference: "Google Consent Mode Requirements · RGPD Art. 7",
+    });
+  }
+
+  checks.push({
+    id: "reject_option",
+    name: "Opción de rechazar cookies",
+    description: "El banner debe ofrecer la opción de rechazar cookies no esenciales con la misma facilidad que aceptarlas.",
+    status: opts.hasRejectButton ? "pass" : (opts.hasBanner ? "fail" : "fail"),
+    detail: opts.hasRejectButton
+      ? "Se detectó opción de rechazar en el banner."
+      : (opts.hasBanner
+          ? "El banner no muestra un botón claro de 'Rechazar'. La AEPD exige que rechazar sea igual de fácil que aceptar."
+          : "Sin banner, no hay opción de rechazar."),
+    severity: "critical",
+    reference: "EDPB Guidelines 03/2022 · AEPD Guía 2024 · CNIL Guidelines",
+  });
+
+  checks.push({
+    id: "revoke_consent",
+    name: "Posibilidad de revocar consentimiento",
+    description: "El usuario debe poder cambiar sus preferencias de cookies en cualquier momento desde cualquier página.",
+    status: opts.hasSettingsButton ? "pass" : "warn",
+    detail: opts.hasSettingsButton
+      ? "Se detectó botón de configuración de cookies accesible."
+      : "No se detectó un botón permanente para modificar las preferencias de cookies (ej: icono flotante, enlace en footer).",
+    severity: "high",
+    reference: "RGPD Art. 7(3) · ICO Guidelines",
+  });
+
+  checks.push({
+    id: "third_party_cookies",
+    name: "Cookies de terceros",
+    description: "Las cookies de terceros requieren consentimiento explícito e informado, especialmente si implican transferencia de datos fuera de la UE.",
+    status: opts.thirdPartyCookies === 0 ? "pass" : "warn",
+    detail: opts.thirdPartyCookies === 0
+      ? "No se detectaron cookies de terceros."
+      : `Se detectaron ${opts.thirdPartyCookies} cookie(s) de terceros. Deben declararse en la política de cookies y requerir consentimiento.`,
+    severity: "high",
+    reference: "RGPD Art. 44-49 · ePrivacy Art. 5(3)",
+  });
+
+  checks.push({
+    id: "cookie_security",
+    name: "Seguridad de cookies",
+    description: "Las cookies deben usar flags de seguridad: Secure (HTTPS), HttpOnly y SameSite.",
+    status: opts.insecureCookies === 0 ? "pass" : "warn",
+    detail: opts.insecureCookies === 0
+      ? "Todas las cookies detectadas usan HTTPS (Secure)."
+      : `${opts.insecureCookies} cookie(s) no usan el flag Secure (se transmiten sin cifrar).`,
+    severity: "medium",
+    reference: "RGPD Art. 32 · Best practices",
+  });
+
+  checks.push({
+    id: "cookie_duration",
+    name: "Duración de cookies",
+    description: "Las cookies de analítica no deben superar 13 meses. Las de marketing, 24 meses máximo.",
+    status: opts.longDurationCookies === 0 ? "pass" : "warn",
+    detail: opts.longDurationCookies === 0
+      ? "No se detectaron cookies con duración excesiva."
+      : `${opts.longDurationCookies} cookie(s) tienen una duración superior a 13 meses.`,
+    severity: "medium",
+    reference: "CNIL Recommendations · RGPD Art. 5(1)(e)",
+  });
+
+  return checks;
+}
+
+function computeScore(checks: GdprCheck[]): number {
   let score = 100;
-  if (!opts.hasBanner) score -= 40;
-  if (!opts.hasPolicy) score -= 20;
-  score -= Math.min(30, opts.trackers * 5);
-  score -= Math.min(10, opts.cookies * 1);
-  return Math.max(0, score);
+  for (const c of checks) {
+    if (c.status === "fail") {
+      if (c.severity === "critical") score -= 20;
+      else if (c.severity === "high") score -= 10;
+      else score -= 5;
+    } else if (c.status === "warn") {
+      if (c.severity === "high") score -= 5;
+      else score -= 2;
+    }
+  }
+  return Math.max(0, Math.min(100, score));
 }
 
 function detectBanner(html: string): boolean {
@@ -404,6 +551,18 @@ function hasConsentManagerFamily(trackers: Map<string, DetectedTracker>): boolea
 
 function detectPolicy(html: string): boolean {
   return /pol[ií]tica[- ]?de[- ]?cookies|cookie[- ]?policy|\/cookies["'\/]/i.test(html);
+}
+
+function detectConsentMode(html: string): boolean {
+  return /gtag\s*\(\s*['"]consent['"]\s*,\s*['"]default['"]|consent_mode|consentMode|ad_storage|analytics_storage/i.test(html);
+}
+
+function detectRejectButton(html: string): boolean {
+  return /rechazar\s*(todas|todo|cookies)?|reject\s*(all)?|denegar|no\s*acepto|decline|refuser|refuse/i.test(html);
+}
+
+function detectSettingsButton(html: string): boolean {
+  return /gestionar\s*(preferencias|cookies)|cookie\s*settings|personalizar|configurar\s*cookies|manage\s*(preferences|cookies)|ajustes\s*de\s*cookies/i.test(html);
 }
 
 type FetchResult = {
@@ -613,6 +772,10 @@ export async function POST(req: NextRequest) {
       const trackers = new Map<string, DetectedTracker>();
       let hasBanner = false;
       let hasPolicy = false;
+      let firstBannerVisible = false;
+      let hasConsentMode = false;
+      let hasRejectBtn = false;
+      let hasSettingsBtn = false;
 
       send({ type: "start", url: base.toString(), host: base.hostname });
 
@@ -668,8 +831,12 @@ export async function POST(req: NextRequest) {
             if (!r) continue;
             if (r.html) {
               detectTrackers(r.html, trackers);
-              if (!hasBanner && (r.bannerVisible || detectBanner(r.html))) hasBanner = true;
+
+              if (!hasBanner && (r.bannerVisible || detectBanner(r.html))) { hasBanner = true; firstBannerVisible = r.bannerVisible; }
               if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
+              if (!hasConsentMode && detectConsentMode(r.html)) hasConsentMode = true;
+              if (!hasRejectBtn && detectRejectButton(r.html)) hasRejectBtn = true;
+              if (!hasSettingsBtn && detectSettingsButton(r.html)) hasSettingsBtn = true;
               if (visited.size < HARD_CAP) {
                 for (const link of extractLinks(r.html, base)) {
                   if (!visited.has(link) && !queued.has(link)) {
@@ -734,8 +901,12 @@ export async function POST(req: NextRequest) {
           for (const { r } of results) {
             if (!r || !r.html) continue;
             detectTrackers(r.html, trackers);
+            allHtml += r.html;
             if (!hasBanner && detectBanner(r.html)) hasBanner = true;
             if (!hasPolicy && detectPolicy(r.html)) hasPolicy = true;
+            if (!hasConsentMode && detectConsentMode(r.html)) hasConsentMode = true;
+            if (!hasRejectBtn && detectRejectButton(r.html)) hasRejectBtn = true;
+            if (!hasSettingsBtn && detectSettingsButton(r.html)) hasSettingsBtn = true;
             if (visited.size < HARD_CAP) {
               for (const link of extractLinks(r.html, base)) {
                 if (!visited.has(link) && !queued.has(link)) {
@@ -770,17 +941,53 @@ export async function POST(req: NextRequest) {
         const cookiesArr = [...cookies.values()];
         const trackersArr = [...trackers.values()].filter((t) => t.kind === "tracker");
         const pluginsArr = [...trackers.values()].filter((t) => t.kind === "plugin");
-        const score = computeScore({
-          cookies: cookiesArr.length,
-          trackers: trackersArr.length,
+
+        const nonEssentialBeforeConsent = cookiesArr.filter(
+          (c) => c.source === "http" && c.category && c.category !== "necessary"
+        ).length;
+        const thirdPartyCookies = cookiesArr.filter(
+          (c) => c.source === "http" && c.domain !== base.hostname && !c.domain.endsWith("." + base.hostname)
+        ).length;
+        const insecureCookies = cookiesArr.filter(
+          (c) => c.source === "http" && !c.secure
+        ).length;
+        const longDurationCookies = cookiesArr.filter((c) => {
+          if (!c.expires) return false;
+          const m = c.expires.match(/(\d+)\s*(año|year|mes|month)/i);
+          if (!m) return false;
+          const val = parseInt(m[1]);
+          const unit = m[2].toLowerCase();
+          if (unit.startsWith("año") || unit.startsWith("year")) return val > 1;
+          return val > 13;
+        }).length;
+
+        const hasGoogleTracker = trackersArr.some((t) => t.provider === "Google");
+
+        const gdprChecks = runGdprChecks({
           hasBanner,
+          bannerVisible: firstBannerVisible,
           hasPolicy,
+          hasConsentMode: hasConsentMode || !hasGoogleTracker,
+          hasRejectButton: hasRejectBtn,
+          hasSettingsButton: hasSettingsBtn,
+          cookiesBeforeConsent: nonEssentialBeforeConsent,
+          thirdPartyCookies,
+          trackersWithoutBanner: !hasBanner ? trackersArr.length : 0,
+          insecureCookies,
+          longDurationCookies,
+          trackers: trackersArr.length,
         });
+
+        const score = computeScore(gdprChecks);
+        const passed = gdprChecks.filter((c) => c.status === "pass").length;
+        const failed = gdprChecks.filter((c) => c.status === "fail").length;
+        const warnings = gdprChecks.filter((c) => c.status === "warn").length;
+
         const elapsed = Date.now() - start;
         const timedOut = elapsed >= MAX_TOTAL_MS && queue.length > 0;
 
         const phase2Elapsed = Date.now() - phase2Start;
-        console.log(`[scan-public] ${base.hostname} | ${visited.size} URLs | ${cookiesArr.length} cookies | ${trackersArr.length} trackers | total=${elapsed}ms phase1=${phase1Elapsed}ms phase2=${phase2Elapsed}ms`);
+        console.log(`[scan-public] ${base.hostname} | ${visited.size} URLs | ${cookiesArr.length} cookies | ${trackersArr.length} trackers | score=${score} | total=${elapsed}ms phase1=${phase1Elapsed}ms phase2=${phase2Elapsed}ms`);
 
         send({
           type: "done",
@@ -793,7 +1000,8 @@ export async function POST(req: NextRequest) {
           cookies: cookiesArr,
           trackers: trackersArr,
           plugins: pluginsArr,
-          checks: { has_banner: hasBanner, has_policy: hasPolicy },
+          gdpr_checks: gdprChecks,
+          gdpr_summary: { passed, failed, warnings, total: gdprChecks.length },
           score,
         });
       } catch (e) {
