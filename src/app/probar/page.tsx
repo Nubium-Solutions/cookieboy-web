@@ -5,7 +5,6 @@ import { useState } from "react";
 
 export default function ProbarPage() {
   const [email, setEmail] = useState("");
-  const [domain, setDomain] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     ok: boolean;
@@ -24,7 +23,7 @@ export default function ProbarPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, domain }),
+          body: JSON.stringify({ email }),
         }
       );
       const data = await res.json();
@@ -38,8 +37,7 @@ export default function ProbarPage() {
 
   const errorMessages: Record<string, string> = {
     invalid_email: "Introduce un email válido.",
-    invalid_domain: "Introduce un dominio válido (ej: mitienda.es).",
-    trial_already_used: "Este dominio ya ha tenido un periodo de prueba.",
+    too_many_trials: "Has alcanzado el máximo de pruebas gratuitas.",
     rate_limit_exceeded: "Demasiados intentos. Espera unos minutos.",
     connection_error: "No se pudo conectar con el servidor. Inténtalo de nuevo.",
   };
@@ -111,19 +109,6 @@ export default function ProbarPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@empresa.com"
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Dominio de tu WordPress
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  placeholder="mitienda.es"
                   className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"
                 />
               </div>
