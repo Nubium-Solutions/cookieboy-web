@@ -30,7 +30,7 @@ const plans: Plan[] = [
     period: "/año",
     description: "Para profesionales y pymes con más tráfico.",
     features: [
-      "1.200 URLs rastreadas",
+      "500 URLs rastreadas",
       "1 dominio",
       "Banner personalizable",
       "Política autogenerada",
@@ -43,11 +43,11 @@ const plans: Plan[] = [
   {
     slug: "oro",
     name: "Oro",
-    price: "110€",
+    price: "90€",
     period: "/año",
     description: "Para agencias que gestionan webs de clientes.",
     features: [
-      "2.400 URLs rastreadas",
+      "1.200 URLs rastreadas",
       "3 dominios",
       "Auto-bloqueo de scripts",
       "Diccionario ampliado",
@@ -59,7 +59,7 @@ const plans: Plan[] = [
   {
     slug: "platino",
     name: "Platino",
-    price: "230€",
+    price: "180€",
     period: "/año",
     description: "Para consultores LOPD y grandes organizaciones.",
     features: [
